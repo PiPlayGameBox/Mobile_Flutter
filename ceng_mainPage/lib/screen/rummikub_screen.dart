@@ -101,6 +101,15 @@ class _RummikubScreenState extends State<RummikubScreen> {
     // Update anyRummyClicked
     setState(() {
       anyRummyClicked = ClickableRummyTileGlobals.isAnyClicked;
+
+      if(TurnbasedClickableRummyTileGlobals.isAnyClicked != false){
+        anyRummyClicked = TurnbasedClickableRummyTileGlobals.isAnyClicked;
+      }
+
+      if(TurnbasedMiddleRummyTileGlobals.isAnyClicked != false){
+        anyRummyClicked = TurnbasedMiddleRummyTileGlobals.isAnyClicked;
+      }
+
       print('Any rumi Clicked: $anyRummyClicked');
     });
 
@@ -120,6 +129,15 @@ class _RummikubScreenState extends State<RummikubScreen> {
       // Update fromTile
       setState(() {
         fromTile = ClickableRummyTileGlobals.clickedTileIndex;
+
+        if(TurnbasedClickableRummyTileGlobals.clickedTileIndex != -1){
+          fromTile = TurnbasedClickableRummyTileGlobals.clickedTileIndex;
+        }
+
+        if(TurnbasedMiddleRummyTileGlobals.clickedTileIndex != -1){
+          fromTile = TurnbasedMiddleRummyTileGlobals.clickedTileIndex;
+        }
+
         print('From: $fromTile');
       });
     }
@@ -562,6 +580,27 @@ class _RummikubScreenState extends State<RummikubScreen> {
     return created;
   }
 
+  String createGetRequestMessage(String strOY, String placeIndex){
+
+    String created = '';
+
+    const String getStone = 'GETSTONE|';
+
+    created += getStone;
+
+    created += respToken;
+
+    created += '|';
+
+    created += strOY;
+
+    created += '|';
+
+    created += placeIndex;
+
+    return created;
+  }
+
   void _sendBoardRequest() async {
     try {
       // Create a new socket for each request
@@ -677,6 +716,45 @@ class _RummikubScreenState extends State<RummikubScreen> {
 
   }
 
+  void _sendGetTileRequest(String getReq) async {
+
+    try {
+      // Create a new socket for each request
+      // 10.42.0.1 IP of rasp
+      Socket _socket = await Socket.connect('127.0.0.1', 8080);
+
+      // Send a simple message to the server
+      _socket.write(getReq);
+
+      // Listen for responses from the server
+      _socket.listen(
+            (List<int> data) {
+          // Convert the received data to a String
+          String response = utf8.decode(data);
+
+          // Update the UI with the received response
+          // print('Received from server MOVE: $response');
+
+          // Close the socket after receiving a response
+          _socket.close();
+        },
+        onDone: () {
+          // Handle when the server closes the connection
+          print('Server closed the connection');
+        },
+        onError: (error) {
+          // Handle any errors that occur during communication
+          print('Error receiving response: $error');
+          // Close the socket in case of an error
+          _socket.close();
+        },
+      );
+    } catch (e) {
+      print('Error sending request: $e');
+    }
+
+  }
+
   /*void _sendTCPRequest() async {
     try {
       // Create a new socket for each request
@@ -730,7 +808,7 @@ class _RummikubScreenState extends State<RummikubScreen> {
     String strMiddleTiles = '';
 
 
-    timer = Timer.periodic(const Duration(milliseconds: 100), (Timer timer) {
+    timer = Timer.periodic(const Duration(seconds: 2), (Timer timer) {
 
       setState(() {
 
@@ -787,6 +865,65 @@ class _RummikubScreenState extends State<RummikubScreen> {
         updateFromTile();
 
         updateToTile();
+
+        // Checks if user get tile from middle.
+        if(TurnbasedMiddleRummyTileGlobals.isAnyClicked){
+
+          if(fromTile == 34){ // Ortadaki taş index = 34
+
+            /*String middleTileStr = middleTiles[0]; // gets the clicked left tile.
+            */
+            if(toTile != -1){ // When toTile is selected too.
+              String toTileStr = toTile.toString();
+              print('GET TILE MIDDLE: $toTileStr');
+              String getReq = createGetRequestMessage('O', toTileStr);
+
+              _sendGetTileRequest(getReq);
+
+              TurnbasedMiddleRummyTileGlobals.isAnyClicked = false;
+              EmptyRummyTileGlobals.isAnyEmptyClicked = false;
+              // Resetting the global index of clicked.
+              EmptyRummyTileGlobals.placedTileIndex = -1;
+
+              TurnbasedMiddleRummyTileGlobals.clickedTileIndex = -1;
+
+              anyEmptyClicked = false;
+            }
+
+
+          }
+
+        }
+
+        // Checks if user get tile from left.
+        if(TurnbasedClickableRummyTileGlobals.isAnyClicked){ // Soldaki taş index = 33;
+
+          if(fromTile == 33){ // Soldaki taş index = 33;
+
+            /*String leftTileStr = tilesThrown[3]; // gets the clicked left tile.
+            print('GET TILE LEFT: $leftTileStr');*/
+
+            if(toTile != -1){// When toTile is selected too.
+              String toTileStr = toTile.toString();
+              print('GET TILE MIDDLE: $toTileStr');
+              String getReq = createGetRequestMessage('Y', toTileStr);
+
+              _sendGetTileRequest(getReq);
+
+              TurnbasedClickableRummyTileGlobals.isAnyClicked = false;
+              EmptyRummyTileGlobals.isAnyEmptyClicked = false;
+              // Resetting the global index of clicked.
+              EmptyRummyTileGlobals.placedTileIndex = -1;
+
+              TurnbasedClickableRummyTileGlobals.clickedTileIndex = -1;
+
+              anyEmptyClicked = false;
+            }
+
+          }
+
+        }
+
 
         // This function checks if user thrown any tile to board.
         if(ClickableRummyTileGlobals.isAnyClicked){

@@ -4,8 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:dotted_border/dotted_border.dart';
 
 
+class TurnbasedMiddleRummyTileGlobals {
+  // Holds if any is clicked.
+  static bool isAnyClicked = false;
+  // This is updated as the index of the clicked tile.
+  static int clickedTileIndex = -1;
+}
+
 class TurnbasedMiddleRummyTile extends StatefulWidget {
-  const TurnbasedMiddleRummyTile({
+  TurnbasedMiddleRummyTile({
     Key? key,
     required this.rummyTileHeight,
     required this.rummyTileWidth,
@@ -16,28 +23,40 @@ class TurnbasedMiddleRummyTile extends StatefulWidget {
     required this.numberL,
   }) : super(key: key);
 
-
   final double rummyTileHeight;
   final double rummyTileWidth;
   final String cloneIndex;
-  final String takozIndex;
-  final String tileNumber;
+  String takozIndex;
+  String tileNumber;
   final Color tileColor;
-  final String numberL;
+  String numberL;
 
   @override
   _TurnbasedMiddleRummyTileState createState() => _TurnbasedMiddleRummyTileState();
 }
 
 class _TurnbasedMiddleRummyTileState extends State<TurnbasedMiddleRummyTile> {
+
   bool isClicked = false;
+
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
         setState(() {
-          isClicked = !isClicked;
+          if(!TurnbasedMiddleRummyTileGlobals.isAnyClicked){ // If there is not any tile clicked before we click and make the flag any true.
+            isClicked = !isClicked;
+            TurnbasedMiddleRummyTileGlobals.isAnyClicked = true;
+            // And updating the global index of clicked.
+            TurnbasedMiddleRummyTileGlobals.clickedTileIndex = int.parse(widget.takozIndex);
+          }
+          else if(TurnbasedMiddleRummyTileGlobals.isAnyClicked && isClicked){ // If any tile is clicked and that's this tile, we can un-click it and reset the any flag.
+            isClicked = !isClicked;
+            TurnbasedMiddleRummyTileGlobals.isAnyClicked = false;
+            // Resetting the global index of clicked.
+            TurnbasedMiddleRummyTileGlobals.clickedTileIndex = -1;
+          }
         });
       },
       child: isClicked
@@ -63,4 +82,7 @@ class _TurnbasedMiddleRummyTileState extends State<TurnbasedMiddleRummyTile> {
       ),
     );
   }
+
+
 }
+

@@ -1,15 +1,16 @@
 # ceng_mainpage
 
-Whole logic of the flutter and client side.
+Main page implementation.
 
-## Implementations
+## Getting Started
 
-Implementations to develop and update or implemented.
+This project is a starting point for a Flutter application.
 
-- Login Screen
-- Lobby Screen
-- Profile Screen
-- Ludo Game
-- Rummikub Game (Okey) 
+A few resources to get you started if this is your first Flutter project:
 
-More details will be given in following implementations
+- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
+- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+
+For help getting started with Flutter development, view the
+[online documentation](https://docs.flutter.dev/), which offers tutorials,
+samples, guidance on mobile development, and a full API reference.
