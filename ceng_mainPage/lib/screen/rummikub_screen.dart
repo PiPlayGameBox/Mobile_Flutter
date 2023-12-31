@@ -20,6 +20,7 @@ import 'package:provider/provider.dart';
 String respToken = '0';
 String resp = '0';
 String exampleResponse = 'OK/E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|/E|E|E|E|/E|E|48';
+String ludoResponse = 'OK/123456 5123456 60/R1|R2|R3|E/B1';
 /*'OK/B4_1|Y10_2|B13_1|E|R4_1|R10_1|K11_2|B6_2|E|K9_2|K6_2|E|B12_1|B1_2|E|E|E|E|K5_2|E|E|E|E|E|E|Y5_2|E|E|E|Y13_1|/E|B9_2|Y9_2|Y10_1|/Y4_2|B7_2|47';*/
 /*
   OK, tiles, floor (floor[3]=next tile to get), (spoiler tile to get middle, okey, tiles left.)
@@ -617,7 +618,7 @@ class _RummikubScreenState extends State<RummikubScreen> {
           String response = utf8.decode(data);
 
           // Update the UI with the received response
-          //print('Received from server: $response');
+          print('Received from server: $response');
 
           resp = response;
 
@@ -808,7 +809,7 @@ class _RummikubScreenState extends State<RummikubScreen> {
     String strMiddleTiles = '';
 
 
-    timer = Timer.periodic(const Duration(seconds: 2), (Timer timer) {
+    timer = Timer.periodic(const Duration(milliseconds: 100), (Timer timer) {
 
       setState(() {
 
