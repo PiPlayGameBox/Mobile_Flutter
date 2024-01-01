@@ -61,7 +61,6 @@ String ludoResponse = 'OK/123456 5123456 60/R1|R2|R3|E/B1';
 class RummikubScreen extends StatefulWidget {
   static String routeName = '/rummikub';
 
-
   const RummikubScreen({
     Key? key,
     required this.token,
@@ -967,7 +966,7 @@ class _RummikubScreenState extends State<RummikubScreen> {
             if( -1<fromTile && fromTile<15 ){ // If first floor
               fromTileFlag = firstFloor.elementAt(fromTile) is ClickableRummyTile;
             }
-            else if(15<fromTile){ // Second floor.
+            else if(14<fromTile){ // Second floor.
               fromTileFlag = secondFloor.elementAt(fromTile-15) is ClickableRummyTile;
             }
 
@@ -976,7 +975,7 @@ class _RummikubScreenState extends State<RummikubScreen> {
             if( -1<toTile && toTile<15 ){ // If first floor
               toTileFlag = firstFloor.elementAt(toTile) is EmptyRummyTile;
             }
-            else if(15<toTile){ // Second floor.
+            else if(14<toTile){ // Second floor.
               toTileFlag = secondFloor.elementAt(toTile-15) is EmptyRummyTile;
             }
 
