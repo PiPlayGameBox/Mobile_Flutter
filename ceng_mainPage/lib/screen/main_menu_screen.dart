@@ -1,4 +1,6 @@
+import 'package:ceng_mainpage/screen/leaderboard_screen.dart';
 import 'package:ceng_mainpage/screen/lobbies_screen.dart';
+import 'package:ceng_mainpage/screen/lobby_screen.dart';
 import 'package:ceng_mainpage/screen/profile_screen.dart';
 import 'package:ceng_mainpage/widget/custom_imagebanner.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +18,14 @@ class MainMenuScreen extends StatelessWidget {
 
   void lobbies(BuildContext context){
     Navigator.pushNamed(context, LobbiesScreen.routeName);
+  }
+
+  void lobby(BuildContext context){
+    Navigator.pushNamed(context, LobbyScreen.routeName);
+  }
+
+  void leaderboard(BuildContext context){
+    Navigator.pushNamed(context, LeaderboardScreen.routeName);
   }
 
   @override
@@ -38,6 +48,11 @@ class MainMenuScreen extends StatelessWidget {
             CustomButton(
               onTap: () => lobbies(context),
               text: 'Show All Lobbies',
+            ),
+            const SizedBox(height: 10,), // To separate buttons.
+            CustomButton(
+              onTap: () => leaderboard(context),
+              text: 'Leaderboard',
             ),
 
           ],

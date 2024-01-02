@@ -1,6 +1,7 @@
-import 'package:ceng_mainpage/provider/LudoKing.dart';
 import 'package:ceng_mainpage/provider/room_data_provider.dart';
+import 'package:ceng_mainpage/screen/leaderboard_screen.dart';
 import 'package:ceng_mainpage/screen/lobbies_screen.dart';
+import 'package:ceng_mainpage/screen/lobby_screen.dart';
 import 'package:ceng_mainpage/screen/main_menu_screen.dart';
 import 'package:ceng_mainpage/screen/profile_screen.dart';
 import 'package:ceng_mainpage/screen/rummikub_screen.dart';
@@ -41,7 +42,8 @@ class MyApp extends StatelessWidget {
           WelcomeScreen.routeName: (context) => const WelcomeScreen(),
           SignupScreen.routeName: (context) => const SignupScreen(),
           LoginScreen.routeName: (context) => const LoginScreen(),
-          LudoKing.routeName: (context) => const LudoKing(),
+          LobbyScreen.routeName: (context) => const LobbyScreen(),
+          LeaderboardScreen.routeName: (context) => const LeaderboardScreen(),
           /*RummikubScreen.routeName: (context) => const RummikubScreen(),*/
         },
         initialRoute: MainMenuScreen.routeName,

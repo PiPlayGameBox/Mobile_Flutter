@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:ceng_mainpage/provider/LudoKing.dart';
 import 'package:ceng_mainpage/provider/room_data_provider.dart';
 import 'package:ceng_mainpage/provider/rummikub_data_provider.dart';
 import 'package:ceng_mainpage/responsive/responsive.dart';
@@ -126,7 +125,7 @@ class _LobbiesScreenState extends State<LobbiesScreen> {
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => LudoScreen(token: respToken,playerInfo: {'R':'ali', 'g':'veli', 'y':'ayşe', 'b':'fatma'},)),
+                            builder: (context) => LudoScreen(token: respToken,playerInfo: {'R':'huseyin', 'g':'veli', 'y':'ayşe', 'b':'fatma'},)),
                       ),
                       roomData: RoomData(
                         'Lobby1','LUDO','pass123',['p1','p2','Cool player B)']

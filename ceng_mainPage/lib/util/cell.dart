@@ -4,16 +4,7 @@ import 'player.dart';
 
 
 // TODO: Immutable class? Belki stateless olduğundandır.
-class Cell extends StatelessWidget{
-
-  // Static fields
-
-  static final Map pathDict = {
-    Player.blu: "assets/images/blue_pawn.png",
-    Player.red: "assets/images/red_pawn.png",
-    Player.grn: "assets/images/green_pawn.png",
-    Player.ylw: "assets/images/yellow_pawn.png",
-  };
+class Cell {
 
   // TODO: bu renkler gerçek board'a göre ayarlancak.
   static Color blu=Colors.blue;
@@ -25,61 +16,6 @@ class Cell extends StatelessWidget{
 
   static Color hili1clr=Colors.blue;
   static Color hili2clr=Colors.purple;
-
-  static List<List<Color>> initialBoardDefClrs=[
-    [red, red, red, red, red, red, wht, wht, grn, grn, grn, grn, grn, grn, grn],
-    [red, wht, cap, wht, red, red, wht, grn, wht, grn, grn, wht, cap, wht, grn],
-    [red, cap, cap, cap, red, red, wht, grn, wht, grn, grn, cap, cap, cap, grn],
-    [red, wht, cap, wht, red, red, wht, grn, wht, grn, grn, wht, cap, wht, grn],
-    [red, red, red, red, red, red, wht, grn, wht, grn, grn, grn, grn, grn, grn],
-    [red, red, red, red, red, red, wht, grn, wht, grn, grn, grn, grn, grn, grn],
-    [red, wht, wht, wht, wht, wht, cap, cap, cap, wht, wht, wht, wht, wht, wht],
-    [wht, red, red, red, red, red, cap, cap, cap, ylw, ylw, ylw, ylw, ylw, wht],
-    [wht, wht, wht, wht, wht, wht, cap, cap, cap, wht, wht, wht, wht, wht, ylw],
-    [blu, blu, blu, blu, blu, blu, wht, blu, wht, ylw, ylw, ylw, ylw, ylw, ylw],
-    [blu, blu, blu, blu, blu, blu, wht, blu, wht, ylw, ylw, ylw, ylw, ylw, ylw],
-    [blu, wht, cap, wht, blu, blu, wht, blu, wht, ylw, ylw, wht, cap, wht, ylw],
-    [blu, cap, cap, cap, blu, blu, wht, blu, wht, ylw, ylw, cap, cap, cap, ylw],
-    [blu, wht, cap, wht, blu, blu, wht, blu, wht, ylw, ylw, wht, cap, wht, ylw],
-    [blu, blu, blu, blu, blu, blu, blu, wht, wht, ylw, ylw, ylw, ylw, ylw, ylw]
-  ];
-
-  static List<List<Player?>> initialBoardPlayers=[
-    [null, null,       null, null,       null, null, null, null, null, null, null, null,       null, null,       null],
-    [null, Player.red, null, Player.red, null, null, null, null, null, null, null, Player.grn, null, Player.grn, null],
-    [null, null,       null, null,       null, null, null, null, null, null, null, null,       null, null,       null],
-    [null, Player.red, null, Player.red, null, null, null, null, null, null, null, Player.grn, null, Player.grn, null],
-    [null, null,       null, null,       null, null, null, null, null, null, null, null,       null, null,       null],
-    [null, null,       null, null,       null, null, null, null, null, null, null, null,       null, null,       null],
-    [null, null,       null, null,       null, null, null, null, null, null, null, null,       null, null,       null],
-    [null, null,       null, null,       null, null, null, null, null, null, null, null,       null, null,       null],
-    [null, null,       null, null,       null, null, null, null, null, null, null, null,       null, null,       null],
-    [null, null,       null, null,       null, null, null, null, null, null, null, null,       null, null,       null],
-    [null, null,       null, null,       null, null, null, null, null, null, null, null,       null, null,       null],
-    [null, Player.blu, null, Player.blu, null, null, null, null, null, null, null, Player.ylw, null, Player.ylw, null],
-    [null, null,       null, null,       null, null, null, null, null, null, null, null,       null, null,       null],
-    [null, Player.blu, null, Player.blu, null, null, null, null, null, null, null, Player.ylw, null, Player.ylw, null],
-    [null, null,       null, null,       null, null, null, null, null, null, null, null,       null, null,       null]
-  ];
-
-  // For different players to have rotated visions, numbers should have rotation symmetry.
-  static List<List<int?>> initialBoardPawnNums=[
-    [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-    [null, 0,    null, 1,    null, null, null, null, null, null, null, 3,    null, 0,    null],
-    [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-    [null, 3,    null, 2,    null, null, null, null, null, null, null, 2,    null, 1,    null],
-    [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-    [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-    [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-    [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-    [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-    [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-    [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-    [null, 1,    null, 2,    null, null, null, null, null, null, null, 2,    null, 3,    null],
-    [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-    [null, 0,    null, 3,    null, null, null, null, null, null, null, 1,    null, 0,    null],
-    [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null]
-  ];
 
   // Each map represent a moveSet of a specific cell, like this: {1: [[(i'=)3, (j'=0), (restriction=)Player?], [opt]]}
   // If map is null for a cell, then it is a non-interactive cell. onTap function is only given for non-null entries.
@@ -251,6 +187,7 @@ class Cell extends StatelessWidget{
 
     // Row 5
     [
+      null, null, null, null, null, null,
       // Col 6
       {
         1: [[4, 6, null]],
@@ -269,7 +206,8 @@ class Cell extends StatelessWidget{
         4: [[6, 12, null]],
         5: [[6, 13, null]],
         6: [[6, 14, null]]
-      }
+      },
+      null, null, null, null, null, null
     ],
 
     // Row 6
@@ -740,29 +678,8 @@ class Cell extends StatelessWidget{
     ],
   ];
 
-  // Instance variables
-
-  final Color defClr;
-  final void Function()? onTapF;
-
-  int hiliLvl;
   Player? player;
   int? pawnNum;
 
-  // Constructor
-
-  Cell({super.key, required this.defClr, this.player, this.pawnNum, this.hiliLvl=0, this.onTapF});
-
-  @override
-  Widget build(BuildContext context) {
-
-    return GestureDetector(
-      onTap: onTapF,
-      child: Container(
-        color: hiliLvl==0 ? defClr : (hiliLvl==1 ? hili1clr : hili2clr),
-        child: player==null ? null : Image(image: AssetImage(pathDict[player]))
-      ),
-    );
-  }
 }
 

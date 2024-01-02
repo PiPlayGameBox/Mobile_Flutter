@@ -43,7 +43,6 @@ class _LudoScreenState extends State<LudoScreen> {
   int touchedPawnIndex = -1;
   double transformValue = 0;
 
-  // total of 16 indexes
   // first 4 for RED, second 4 for GREEN, third 4 for YELLOW, last 4 for BLUE
   // [R0, R1, R2, R3, G0, G1, G2, G3, Y0, Y1, Y2, Y3, B0, B1, B2 ,B3]
   List<int> pawnPositions = [
@@ -68,7 +67,6 @@ class _LudoScreenState extends State<LudoScreen> {
 
   // Following variables are ADDED.
   late Timer timer;
-  late Socket socket;
   int dice = 0;
   String lastDice = "0";
   String myName = "";
@@ -97,7 +95,7 @@ class _LudoScreenState extends State<LudoScreen> {
     // Capture Areas (RGYB)
     52: 32, 53: 33, 54: 47, 55: 48,
     56: 41, 57: 42, 58: 56, 59: 57,
-    60: 176, 61: 177, 62: 191, 63: 191,
+    60: 176, 61: 177, 62: 191, 63: 192,
     64: 167, 65: 168, 66: 182, 67: 183,
 
     // Safe Areas (RGYB)
@@ -140,14 +138,20 @@ class _LudoScreenState extends State<LudoScreen> {
     BLUE_PAWN_BASE_3_INDEX
   ];
 
+  static final Map<String, List<int>> winPositions = {
+    'r':[107, 108, 109, 110],
+    'g':[37, 52, 67, 82],
+    'y':[117, 116, 115, 114],
+    'b':[187, 172, 157, 142]
+  };
+
   // For dice animations.
   int counterTimer = 0;
   int currentImageIndex = 0;
   double diceTransformValue = 0;
   static const int counterTimerMax=12;
-  static const int diceDurationMillis=80;
+  static const int diceDurationMillis=120;
 
-  //int diceValue = 0;
   List<String> diceImages = [
     "assets/images/dice_0.png",
     "assets/images/dice_1.png",
@@ -158,6 +162,116 @@ class _LudoScreenState extends State<LudoScreen> {
     "assets/images/dice_6.png"
   ];
 
+  // Sends request of type reqType to server, reads the returned answer.
+  // May do additional things depending on the reqType.
+  void sendRequest({required String reqType, required String request}) async {
+    try{
+      Socket sock=await Socket.connect("127.0.0.1", 8080); //  10.42.0.1
+      sock.write(request);
+
+      sock.listen(
+        (List<int> data) {
+          String receivedData=String.fromCharCodes(data);
+          sock.close();
+
+          print("Received data is: $receivedData");
+
+          switch(reqType){
+            case "GETLUDO":
+              handleGetLudo(receivedData);
+              break;
+          }
+        },
+        onDone: () {
+          print("Socket is closed.");
+        },
+        onError: (e) {
+          sock.close();
+          print("An error occurred while sending the following request:\n$request");
+          print('Error: $e');
+        },
+        cancelOnError: true
+      );
+    }
+    catch(error){
+      print("An error occurred while opening/writing socket.");
+    }
+  }
+
+  void handleGetLudo(String receivedData){
+    List<String> tokens = receivedData.split("/");
+
+    List<int> newPawnPositions = tokens[1].split("|").map((strLogInd) {
+      return convertLogicalIndex2Physical(int.parse(strLogInd));
+    }).toList();
+
+    List<String> lastDice_curTurn_winner_tokens = tokens[2].split("|");
+
+    setState(() {
+      lastDice = lastDice_curTurn_winner_tokens[0];
+      pawnPositions = newPawnPositions;
+      strWinner = lastDice_curTurn_winner_tokens[2];
+
+      if (strWinner == "empty") {
+        strTurnName = lastDice_curTurn_winner_tokens[1];
+
+        for(var entry in widget.playerInfo.entries){
+          if(strTurnName==entry.value){
+            switch(entry.key){
+              case 'r':
+              case 'R':
+                strTurnColor="Red"; break;
+              case 'g':
+              case 'G':
+                strTurnColor="Green"; break;
+              case 'y':
+              case 'Y':
+                strTurnColor="Yellow"; break;
+              case 'b':
+              case 'B':
+                strTurnColor="Blue"; break;
+            }
+            break;
+          }
+        }
+      }
+      else { // There is a winner
+        // Make "whose turn" variables to no one's turn. (An invalid value.)
+        strTurnName="";
+        strTurnColor="No one";
+
+        // Buraya eklenmeyecek ama, aşağıdaki build metod'u winner'ı kontrol edip
+        // "empty" ise: Şu anki yaptığını yapması lazım.
+        // "empty" değil ise: Şu anki yaptığına ek, "$strWinner has won! [Back to main menu]"
+        // diye bir popup çıkarması lazım ya da diğer şeyleri küçültüp buna yer açarak
+        // altına falan da koyabilir bunu.
+      }
+
+      if (myName == strTurnName) {
+        rollBtnEnabled = true;
+      } else {
+        rollBtnEnabled = false;
+      }
+    });
+
+    if(myName!=strTurnName && strWinner=="empty"){
+      Future.delayed(const Duration(milliseconds: 500), () {
+        sendRequest(reqType: "GETLUDO", request: "GETLUDO|${widget.token}");
+      });
+    }
+  }
+
+  bool didIwin(){
+    bool win=true;
+    for(int myPawnPos in pawnPositions.sublist(sublistMap[myColor]![0], sublistMap[myColor]![1])){
+      if(!winPositions[myColor]!.contains(myPawnPos)){
+        win=false;
+        break;
+      }
+    }
+    return win;
+  }
+
   bool checkRestriction(Player? targetClr) {
     if (targetClr != null && playerMap[myColor] != targetClr) {
       return false;
@@ -166,9 +280,7 @@ class _LudoScreenState extends State<LudoScreen> {
   }
 
   bool checkCollision(targetIndex) {
-    if (pawnPositions
-        .sublist(sublistMap[myColor]![0], sublistMap[myColor]![1])
-        .contains(targetIndex)) {
+    if (pawnPositions.sublist(sublistMap[myColor]![0], sublistMap[myColor]![1]).contains(targetIndex)) {
       return false;
     }
     return true;
@@ -180,15 +292,13 @@ class _LudoScreenState extends State<LudoScreen> {
     int j = index % 15;
 
     Map<int, List<List<dynamic>>>? moveSet = Cell.moveSetDict[i][j];
-    print("MoveSet: $moveSet");
 
     if (moveSet != null) {
       if (moveSet.containsKey(dice)) {
         List<List<dynamic>> moveList = moveSet[dice]!;
-        print("MoveList: $moveList");
 
-        late int targetIndex;
-        late Player targetClr;
+        int targetIndex;
+        Player? targetClr;
 
         if (moveList.length == 2) {
           targetIndex = moveList[1][0] * 15 + moveList[1][1];
@@ -202,13 +312,9 @@ class _LudoScreenState extends State<LudoScreen> {
         // Check the first move.
         targetIndex = moveList[0][0] * 15 + moveList[0][1];
         targetClr = moveList[0][2];
-        print("targetIndex: $targetIndex, targetClr: $targetClr");
 
         if (checkCollision(targetIndex) && checkRestriction(targetClr)) {
           return targetIndex;
-        }
-        else{
-          print('Check FAILED');
         }
       }
     }
@@ -218,14 +324,12 @@ class _LudoScreenState extends State<LudoScreen> {
 
   // Possibe return values: {}, {0: 99}, {0: 99, 3: 98}. // {pawnNumber:targetIndex}
   Map<int, int> getMoves() {
-    List<int> myPawnPos =
-        pawnPositions.sublist(sublistMap[myColor]![0], sublistMap[myColor]![1]);
+    List<int> myPawnPos = pawnPositions.sublist(sublistMap[myColor]![0], sublistMap[myColor]![1]);
     Map<int, int> moves = {};
     int move;
 
     for (int i = 0; i < 4; ++i) {
       move = getMove(myPawnPos[i]);
-      print("Move: $move");
       if (move != -1) {
         moves[i] = move;
       }
@@ -253,10 +357,11 @@ class _LudoScreenState extends State<LudoScreen> {
       rollBtnEnabled = false;
     });
 
+    // Generate dice value with animation
     Timer.periodic(const Duration(milliseconds: diceDurationMillis), (timer) {
       counterTimer++;
       setState(() {
-        currentImageIndex = 6 /*1 + rng.nextInt(6)*/;
+        currentImageIndex = 6/*1 + rng.nextInt(6)*/;
         diceTransformValue = rng.nextDouble() * 180;
       });
       if (counterTimer == counterTimerMax) {
@@ -269,96 +374,96 @@ class _LudoScreenState extends State<LudoScreen> {
       }
     });
 
+    // Wait for dice animation to complete.
     await Future.delayed(const Duration(milliseconds: diceDurationMillis*(counterTimerMax+2)));
 
-    socket.write("ROLLDICE|${widget.token}|$dice");
+    sendRequest(reqType: "ROLLDICE", request: "ROLLDICE|${widget.token}|$dice");
 
     Map<int, int> moves = getMoves();
-    print("Moves: $moves");
+
     if (moves.isEmpty) {
-      /*setState(() {
-        dice = 0;
-      });*/
-      socket.write("MAKEMOVE|${widget.token}|0|-1|-1"); // No move is made.
+      // No move is made.
+      sendRequest(reqType: "PASSTURN", request: "PASSTURN|${widget.token}");
+
+      // Yapabileceği hamle olmayan oyuncu en azından attığı zarın kaç olduğunu
+      // görebilsin sıra bir sonraki kişiye geçmeden diye biraz bekle.
       await Future.delayed(const Duration(milliseconds: 1000));
-      socket.write("GETLUDO|${widget.token}");
-    } else {
+
+      sendRequest(reqType: "GETLUDO", request: "GETLUDO|${widget.token}");
+    }
+    else{
       setState(() {
         highlightedTilePositions.clear();
         for (int key in moves.keys) {
           highlightedTilePositions.add(pawnPositions[sublistMap[myColor]![0] + key]);
-
         }
       });
     }
   }
 
   gridOnTap(int index) async {
-    if (strTurnName == myName && strWinner == "empty") {
-      if (dice != 0) {
-        if (touchedPawnIndex == -1) {
-          if (highlightedTilePositions.contains(index)) {
+    if (strTurnName == myName && strWinner == "empty" && dice!=0) {
+      if (touchedPawnIndex == -1) {
+        if (highlightedTilePositions.contains(index)) {
+          setState(() {
+            touchedPawnIndex = index;
+            highlightedTilePositions.clear();
+            highlightedTilePositions.add(index);
+            highlightedTilePositions.add(getMove(index));
+          });
+        }
+      }
+      else { // touched pawnIndex!=-1
+        if (highlightedTilePositions.contains(touchedPawnIndex)) {
+          if (touchedPawnIndex == index) {
             setState(() {
-              touchedPawnIndex = index;
+              touchedPawnIndex = -1;
+
+              // Convert highlighted positions to previous state.
               highlightedTilePositions.clear();
-              highlightedTilePositions.add(index);
 
               Map<int, int> moves = getMoves();
-              moves.forEach((key, value) {
-                highlightedTilePositions.add(value);
-              });
+              for (int key in moves.keys) {
+                highlightedTilePositions.add(pawnPositions[sublistMap[myColor]![0] + key]);
+              }
             });
           }
-        }
+          // touchedPawnIndex != index
+          else {
+            setState(() {
+              String meAgain = (dice == 6 ? 'T' : 'F');
+              int movedPawnNum = pawnPositions.indexOf(touchedPawnIndex);
+              int movedPawnLogInd = convertPhysicalIndex2Logical(index);
+              String moveRequest = "MAKEMOVE|${widget.token}|$meAgain|$movedPawnNum|$movedPawnLogInd";
+              print("Mve Req: $moveRequest");
+              // Capture case.
+              if (pawnPositions.contains(index)) {
+                int eatenPawnNum = pawnPositions.indexOf(index);
+                int eatenPawnLogInd = convertPhysicalIndex2Logical(initialPawnPositions[eatenPawnNum]);
+                moveRequest += "|$eatenPawnNum|$eatenPawnLogInd";
 
-        // touched pawnIndex!=-1
-        else {
-          if (highlightedTilePositions.contains(touchedPawnIndex)) {
-            if (touchedPawnIndex == index) {
-              setState(() {
-                touchedPawnIndex = -1;
+                // First make capture
+                pawnPositions[eatenPawnNum] =
+                initialPawnPositions[eatenPawnNum];
+              }
 
-                // Convert highlighted positions to previous state.
-                highlightedTilePositions.clear();
-                highlightedTilePositions.add(index);
+              // Make the main move
+              pawnPositions[movedPawnNum] = index;
 
-                Map<int, int> moves = getMoves();
-                moves.forEach((key, value) {
-                  highlightedTilePositions.add(value);
-                });
-              });
+              dice = 0;
+              touchedPawnIndex = -1;
+              highlightedTilePositions.clear();
+
+              // Send the performed move.
+              sendRequest(reqType: "MAKEMOVE", request: moveRequest);
+            });
+
+            if(didIwin()){
+              sendRequest(reqType: "IWON", request: "IWON|${widget.token}");
             }
 
-            // touchedPawnIndex != index
-            else {
-              setState(() {
-                int meAgain = (dice == 6 ? 1 : 0);
-                int movedPawnNum = pawnPositions.indexOf(touchedPawnIndex);
-                int movedPawnLogInd = convertPhysicalIndex2Logical(index);
-                String moveRequest = "MAKEMOVE|${widget.token}|$meAgain|$movedPawnNum|$movedPawnLogInd";
-
-                // Capture case.
-                if (pawnPositions.contains(index)) {
-                  int eatenPawnNum = pawnPositions.indexOf(index);
-                  int eatenPawnLogInd = convertPhysicalIndex2Logical(initialPawnPositions[eatenPawnNum]);
-                  moveRequest += "|$eatenPawnNum|$eatenPawnLogInd";
-
-                  // First make capture
-                  pawnPositions[eatenPawnNum] = initialPawnPositions[eatenPawnNum];
-                }
-
-                // Make the main move
-                pawnPositions[movedPawnNum] = index;
-
-                dice = 0;
-                touchedPawnIndex = -1;
-                highlightedTilePositions.clear();
-
-                // Send the performed move via MAKEMOVE request.
-                socket.write(moveRequest);
-                socket.write("GETLUDO|${widget.token}");
-              });
-            }
+            // Get the new board.
+            sendRequest(reqType: "GETLUDO", request: "GETLUDO|${widget.token}");
           }
         }
       }
@@ -374,15 +479,11 @@ class _LudoScreenState extends State<LudoScreen> {
 
     rng = Random();
 
-    // Always red player starts first.
-    strWinner = "empty";
-    for(var entry in widget.playerInfo.entries){
-      if(entry.key=='r' || entry.key=='R'){
-        strTurnName=entry.value;
-        break;
-      }
-    }
-    strTurnColor = "Red";
+    dice=0;
+    lastDice="0";
+    rollBtnEnabled=false;
+    strTurnName="";
+    strTurnColor="...";
 
     for(var entry in widget.playerInfo.entries){
       switch(entry.key){
@@ -409,90 +510,7 @@ class _LudoScreenState extends State<LudoScreen> {
       }
     }
 
-    if (myName == strTurnName) {
-      rollBtnEnabled = true;
-    } else {
-      rollBtnEnabled = false;
-    }
-
-    Socket.connect("127.0.0.1", 8080).then((s) {
-      socket = s;
-      socket.listen(
-        (List<int> data) {
-          String receivedData = String.fromCharCodes(data);
-
-          // DELETE later.
-          print("Data is: [$receivedData]\n");
-
-          if (receivedData.split("|").length > 2) {
-            List<String> tokens = receivedData.split("/");
-
-            List<int> newPawnPositions = tokens[1].split("|").map((strLogInd) {
-              return convertLogicalIndex2Physical(int.parse(strLogInd));
-            }).toList();
-
-            List<String> lastDice_curTurn_winner_tokens = tokens[2].split("|");
-
-            setState(() {
-              lastDice = lastDice_curTurn_winner_tokens[0];
-              pawnPositions = newPawnPositions;
-              strWinner = lastDice_curTurn_winner_tokens[2];
-
-              rollBtnEnabled = false;
-
-              if (strWinner == "empty") {
-                strTurnName = lastDice_curTurn_winner_tokens[1];
-
-                for(var entry in widget.playerInfo.entries){
-                  if(strTurnName==entry.value){
-                    switch(entry.key){
-                      case 'r':
-                      case 'R':
-                        strTurnColor="Red"; break;
-                      case 'g':
-                      case 'G':
-                        strTurnColor="Green"; break;
-                      case 'y':
-                      case 'Y':
-                        strTurnColor="Yellow"; break;
-                      case 'b':
-                      case 'B':
-                        strTurnColor="Blue"; break;
-                    }
-                    break;
-                  }
-                }
-
-                if (strTurnName == myName) {
-                  rollBtnEnabled = true;
-                }
-              }
-
-              // There is a winner
-              else {
-                // Make "whose turn" variable to no one's turn. (An invalid value.)
-                strTurnName="";
-                strTurnColor="No one";
-
-                // TODO: Buraya eklenmeyecek ama, aşağıdaki build metod'u winner'ı kontrol edip
-                // TODO: "empty" ise: Şu anki yaptığını yapması lazım.
-                // TODO: "empty" değil ise: Şu anki yaptığına ek, "$strWinner has won! [Back to main menu]"
-                // TODO: diye bir popup çıkarması lazım ya da diğer şeyleri küçültüp buna yer açarak
-                // TODO: altına falan da koyabilir bunu.
-              }
-            });
-          }
-        },
-        onError: (error) {
-          print("Soket okunamadı: $error");
-        },
-        cancelOnError: false,
-      );
-    });
-
-    /*timer=Timer.periodic(Duration(milliseconds: 1000), (timer) {
-      socket.write("GETLUDO|$token"); // TODO
-    });*/
+    sendRequest(reqType: "GETLUDO", request: "GETLUDO|${widget.token}");
   }
 
   @override
@@ -710,9 +728,7 @@ class _LudoScreenState extends State<LudoScreen> {
                                             ),
                                 ),
                               );
-                            } else if (pawnPositions
-                                .sublist(8, 12)
-                                .contains(index)) {
+                            } else if (pawnPositions.sublist(8, 12).contains(index)) {
                               return GestureDetector(
                                 onTap: convertPhysicalIndex2Logical(index) != -1
                                     ? () {
@@ -752,15 +768,13 @@ class _LudoScreenState extends State<LudoScreen> {
                                             ),
                                 ),
                               );
-                            } else if (pawnPositions
-                                .sublist(12, 16)
-                                .contains(index)) {
+                            } else if (pawnPositions.sublist(12, 16).contains(index)) {
                               return GestureDetector(
                                 onTap: convertPhysicalIndex2Logical(index) != -1
-                                    ? () {
-                                        gridOnTap(index);
-                                      }
-                                    : null,
+                                  ? () {
+                                      gridOnTap(index);
+                                    }
+                                  : null,
                                 child: Padding(
                                   padding: EdgeInsets.all(boardHeight * 0.008),
                                   child:

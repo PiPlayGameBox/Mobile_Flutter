@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 
 import '../widget/custom_text.dart';
 
+int profilePhotoIndex = 0;
+
 class ProfileScreen extends StatefulWidget {
   static String routeName = '/profile';
   const ProfileScreen({super.key});
@@ -55,10 +57,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Column( // Change nickname part.
                   children: [
                     const SizedBox(height: 20,),
-                    Container(
-                      child: SizedBox(
-                        height: 150,
-                        child: Image.asset('assets/images/profile1.jpg'),
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          profilePhotoIndex++;
+                          print(profilePhotoIndex%10);
+                        });
+                      },
+                      child: Container(
+                        child: SizedBox(
+                          height: 150,
+                          child: Image.asset('assets/images/profile1.jpg'),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 50,),
