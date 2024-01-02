@@ -1,5 +1,7 @@
+import 'package:ceng_mainpage/widget/clickable_rummy_tile.dart';
 import 'package:ceng_mainpage/widget/mid_rummy_tile.dart';
 import 'package:ceng_mainpage/widget/rummy_tile.dart';
+import 'package:ceng_mainpage/widget/turnbased_clickable_rummy_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:dotted_border/dotted_border.dart';
 
@@ -45,7 +47,7 @@ class _TurnbasedMiddleRummyTileState extends State<TurnbasedMiddleRummyTile> {
     return GestureDetector(
       onTap: () {
         setState(() {
-          if(!TurnbasedMiddleRummyTileGlobals.isAnyClicked){ // If there is not any tile clicked before we click and make the flag any true.
+          if(!ClickableRummyTileGlobals.isAnyClicked && !TurnbasedClickableRummyTileGlobals.isAnyClicked && !TurnbasedMiddleRummyTileGlobals.isAnyClicked){ // If there is not any tile clicked before we click and make the flag any true.
             isClicked = !isClicked;
             TurnbasedMiddleRummyTileGlobals.isAnyClicked = true;
             // And updating the global index of clicked.

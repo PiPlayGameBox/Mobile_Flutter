@@ -5,11 +5,16 @@ import 'package:ceng_mainpage/provider/rummikub_data_provider.dart';
 import 'package:ceng_mainpage/widget/clickable_rummy_tile.dart';
 import 'package:ceng_mainpage/widget/empty_rummy_tile.dart';
 import 'package:ceng_mainpage/widget/mid_rummy_tile.dart';
+import 'package:ceng_mainpage/widget/nonclickable_empty_tile.dart';
 import 'package:ceng_mainpage/widget/nonclickable_rummy_tile.dart';
 import 'package:ceng_mainpage/widget/player_frame.dart';
 import 'package:ceng_mainpage/widget/rummy_tile.dart';
 import 'package:ceng_mainpage/widget/turnbased_clickable_rummy_tile.dart';
 import 'package:ceng_mainpage/widget/turnbased_middle_rummy_tile.dart';
+import 'package:ceng_mainpage/widget/turnbased_right_tile.dart';
+import 'package:ceng_mainpage/widget/turnpassed_left_tile.dart';
+import 'package:ceng_mainpage/widget/turnpassed_middle_tile.dart';
+import 'package:ceng_mainpage/widget/turnpassed_right_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:dotted_border/dotted_border.dart';
@@ -19,8 +24,10 @@ import 'package:provider/provider.dart';
 
 String respToken = '0';
 String resp = '0';
-String exampleResponse = 'OK/E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|/E|E|E|E|/E|E|48';
-String ludoResponse = 'OK/123456 5123456 60/R1|R2|R3|E/B1';
+String exampleResponse = 'OK/E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|/E|E|E|E|/E|E|48/huseyin';
+bool isTurn = false; // Checks if its user's turn. When user gets a tile, this becomes false and makes the isGet true and waits for the user to throw tile.
+bool isGet = false; // Becomes true when tile get from board, becomes false when tile thrown.
+int numberOfTiles = 0;
 /*'OK/B4_1|Y10_2|B13_1|E|R4_1|R10_1|K11_2|B6_2|E|K9_2|K6_2|E|B12_1|B1_2|E|E|E|E|K5_2|E|E|E|E|E|E|Y5_2|E|E|E|Y13_1|/E|B9_2|Y9_2|Y10_1|/Y4_2|B7_2|47';*/
 /*
   OK, tiles, floor (floor[3]=next tile to get), (spoiler tile to get middle, okey, tiles left.)
@@ -56,6 +63,11 @@ String ludoResponse = 'OK/123456 5123456 60/R1|R2|R3|E/B1';
   2 : Number of tiles left
 */
 
+/*
+  array[4]
+  Player of this turn.
+*/
+
 
 
 class RummikubScreen extends StatefulWidget {
@@ -64,9 +76,11 @@ class RummikubScreen extends StatefulWidget {
   const RummikubScreen({
     Key? key,
     required this.token,
+    required this.userName,
   }) : super(key: key);
 
   final String token;
+  final String userName;
 
   @override
   State<RummikubScreen> createState() => _RummikubScreenState();
@@ -150,7 +164,33 @@ class _RummikubScreenState extends State<RummikubScreen> {
       });
     }
 
+    void checkPlayerTurn(String userTurn){
+      print('USR turn1: $userTurn');
+      print('widget usr: ${widget.userName}');
+      if(widget.userName == userTurn){
+        setState(() {
+          isTurn = true;
+        });
+      }else{
+        setState(() {
+          isTurn = false;
+        });
 
+      }
+    }
+
+    int getNumberOfTiles(List<String> tilesOnTakoz){
+      int count = 0;
+
+      // Scans the takoz.
+      for(int i = 0; i < 30; i++ ){
+        if(tilesOnTakoz[i] != 'E'){ // With this logic, we get the number of tiles on board.
+          count++;
+        }
+      }
+
+      return count;
+    }
 
 
   // Thrown tiles are coming from array 2.
@@ -159,14 +199,14 @@ class _RummikubScreenState extends State<RummikubScreen> {
   Widget rummyTilesOnTheFloorLeftTop = Container();
   Widget rummyTilesOnTheFloorLeftBot = Container();
 
-  void constructThrown(double rummyTileHeight, double rummyTileWidth){
+  void constructThrown(double rummyTileHeight, double rummyTileWidth, bool isMyTurn, bool isGetted){
 
     String thrown0 = dataProvider.rumiData[dataProvider.index].tilesThrown[0];
     String thrown1 = dataProvider.rumiData[dataProvider.index].tilesThrown[1];
     String thrown2 = dataProvider.rumiData[dataProvider.index].tilesThrown[2];
     String thrown3 = dataProvider.rumiData[dataProvider.index].tilesThrown[3];
 
-    // Index 0
+    // Index 0.  RIGHT TILE (Tile to throw.)
     if(thrown0 == 'E'){
       rummyTilesOnTheFloorRightBot = EmptyRummyTile(
           rummyTileHeight: rummyTileHeight,
@@ -188,32 +228,52 @@ class _RummikubScreenState extends State<RummikubScreen> {
       // When we ignore the color at index 0, remaining part is tile number.
       String tileNumber = tileWithColor.substring(1);
 
-      rummyTilesOnTheFloorRightBot = NonclickableRummyTile(
-        rummyTileHeight: rummyTileHeight,
-        rummyTileWidth: rummyTileWidth,
-        cloneIndex: cloneNumber,
-        takozIndex: '30', // They are not at the takoz but we continue indexing them from 30.
-        tileNumber: tileNumber,
-        tileColor: tileColor == 'R' // If R, red,
-            ? Colors.red
-            : tileColor == 'K' // If K, black
-            ? Colors.black
-            : tileColor == 'B' // If B, blue
-            ? Colors.blue
-            : tileColor == 'Y' // If Y, yellow
-            ? Colors.orange
-            : Colors.green, // Else, (In joker situation) its green.
-      );
+      if(isGetted){ // User get the tile. Has 15 tiles on takoz.
+        rummyTilesOnTheFloorRightBot = TurnbasedRightTile(
+          rummyTileHeight: rummyTileHeight,
+          rummyTileWidth: rummyTileWidth,
+          anyRummyClicked: anyRummyClicked,
+          cloneIndex: cloneNumber,
+          takozIndex: '30', // They are not at the takoz but we continue indexing them from 30.
+          tileNumber: tileNumber,
+          tileColor: tileColor == 'R' // If R, red,
+              ? Colors.red
+              : tileColor == 'K' // If K, black
+              ? Colors.black
+              : tileColor == 'B' // If B, blue
+              ? Colors.blue
+              : tileColor == 'Y' // If Y, yellow
+              ? Colors.orange
+              : Colors.green, // Else, (In joker situation) its green.
+        );
+      }
+      else{ // User has 14 tiles on takoz.
+        rummyTilesOnTheFloorRightBot = TurnpassedRightTile(
+          rummyTileHeight: rummyTileHeight,
+          rummyTileWidth: rummyTileWidth,
+          cloneIndex: cloneNumber,
+          takozIndex: '30', // They are not at the takoz but we continue indexing them from 30.
+          tileNumber: tileNumber,
+          tileColor: tileColor == 'R' // If R, red,
+              ? Colors.red
+              : tileColor == 'K' // If K, black
+              ? Colors.black
+              : tileColor == 'B' // If B, blue
+              ? Colors.blue
+              : tileColor == 'Y' // If Y, yellow
+              ? Colors.orange
+              : Colors.green, // Else, (In joker situation) its green.
+        );
+      }
+
     }
 
     // Index 1
     if(thrown1 == 'E'){
-      rummyTilesOnTheFloorRightTop = EmptyRummyTile(
+      rummyTilesOnTheFloorRightTop = NonclickableEmptyTile(
         rummyTileHeight: rummyTileHeight,
         rummyTileWidth: rummyTileWidth,
-        anyRummyClicked: anyRummyClicked,
         takozIndex: '31',
-/*        isMoved: isMoved,*/
       );
     }
     else{
@@ -248,12 +308,10 @@ class _RummikubScreenState extends State<RummikubScreen> {
 
     // Index 2
     if(thrown2 == 'E'){
-      rummyTilesOnTheFloorLeftTop = EmptyRummyTile(
+      rummyTilesOnTheFloorLeftTop = NonclickableEmptyTile(
         rummyTileHeight: rummyTileHeight,
         rummyTileWidth: rummyTileWidth,
-        anyRummyClicked: anyRummyClicked,
         takozIndex: '32',
-/*        isMoved: isMoved,*/
       );
     }
     else{
@@ -286,14 +344,12 @@ class _RummikubScreenState extends State<RummikubScreen> {
       );
     }
 
-    // Index 3 Which can be selected by user.
+    // Index 3 Which can be selected by user. LEFT TILE
     if(thrown3 == 'E'){
-      rummyTilesOnTheFloorLeftBot = EmptyRummyTile(
+      rummyTilesOnTheFloorLeftBot = NonclickableEmptyTile(
         rummyTileHeight: rummyTileHeight,
         rummyTileWidth: rummyTileWidth,
-        anyRummyClicked: anyRummyClicked,
         takozIndex: '33',
-/*        isMoved: isMoved,*/
       );
     }
     else{
@@ -308,22 +364,45 @@ class _RummikubScreenState extends State<RummikubScreen> {
       // When we ignore the color at index 0, remaining part is tile number.
       String tileNumber = tileWithColor.substring(1);
 
-      rummyTilesOnTheFloorLeftBot = TurnbasedClickableRummyTile(
-        rummyTileHeight: rummyTileHeight,
-        rummyTileWidth: rummyTileWidth,
-        cloneIndex: cloneNumber,
-        takozIndex: '33', // They are not at the takoz but we continue indexing them from 33.
-        tileNumber: tileNumber,
-        tileColor: tileColor == 'R' // If R, red,
-            ? Colors.red
-            : tileColor == 'K' // If K, black
-            ? Colors.black
-            : tileColor == 'B' // If B, blue
-            ? Colors.blue
-            : tileColor == 'Y' // If Y, yellow
-            ? Colors.orange
-            : Colors.green, // Else, (In joker situation) its green.
-      );
+      if(isMyTurn){
+        rummyTilesOnTheFloorLeftBot = TurnbasedClickableRummyTile(
+          rummyTileHeight: rummyTileHeight,
+          rummyTileWidth: rummyTileWidth,
+          cloneIndex: cloneNumber,
+          takozIndex: '33', // They are not at the takoz but we continue indexing them from 33.
+          tileNumber: tileNumber,
+          tileColor: tileColor == 'R' // If R, red,
+              ? Colors.red
+              : tileColor == 'K' // If K, black
+              ? Colors.black
+              : tileColor == 'B' // If B, blue
+              ? Colors.blue
+              : tileColor == 'Y' // If Y, yellow
+              ? Colors.orange
+              : Colors.green, // Else, (In joker situation) its green.
+        );
+      }
+      else{
+        rummyTilesOnTheFloorLeftBot = TurnpassedLeftTile(
+          rummyTileHeight: rummyTileHeight,
+          rummyTileWidth: rummyTileWidth,
+          cloneIndex: cloneNumber,
+          takozIndex: '33', // They are not at the takoz but we continue indexing them from 33.
+          tileNumber: tileNumber,
+          tileColor: tileColor == 'R' // If R, red,
+              ? Colors.red
+              : tileColor == 'K' // If K, black
+              ? Colors.black
+              : tileColor == 'B' // If B, blue
+              ? Colors.blue
+              : tileColor == 'Y' // If Y, yellow
+              ? Colors.orange
+              : Colors.green, // Else, (In joker situation) its green.
+        );
+
+      }
+
+
     }
 
   }
@@ -334,7 +413,7 @@ class _RummikubScreenState extends State<RummikubScreen> {
   Widget okeyRummyTile = Container();
 
 
-  void constructMiddle(double rummyTileHeight, double rummyTileWidth){
+  void constructMiddle(double rummyTileHeight, double rummyTileWidth, bool isMyTurn){
     String middle0 = dataProvider.rumiData[dataProvider.index].middleTiles[0];
     String okey1 = dataProvider.rumiData[dataProvider.index].middleTiles[1];
     String tilesRemaining = dataProvider.rumiData[dataProvider.index].middleTiles[2];
@@ -361,23 +440,51 @@ class _RummikubScreenState extends State<RummikubScreen> {
       // When we ignore the color at index 0, remaining part is tile number.
       String tileNumber = tileWithColor.substring(1);
 
-      midRummyTile = TurnbasedMiddleRummyTile(
-        rummyTileHeight: rummyTileHeight,
-        rummyTileWidth: rummyTileWidth,
-        cloneIndex: cloneNumber,
-        takozIndex: '34', // They are not at the takoz but we continue indexing them from 30.
-        tileNumber: tileNumber,
-        tileColor: tileColor == 'R' // If R, red,
-            ? Colors.red
-            : tileColor == 'K' // If K, black
-            ? Colors.black
-            : tileColor == 'B' // If B, blue
-            ? Colors.blue
-            : tileColor == 'Y' // If Y, yellow
-            ? Colors.orange
-            : Colors.green, // Else, (In joker situation) its green.
-        numberL: tilesRemaining,
-      );
+      if(isMyTurn){ // If its my turn, we can get middle tile.
+
+        midRummyTile = TurnbasedMiddleRummyTile(
+          rummyTileHeight: rummyTileHeight,
+          rummyTileWidth: rummyTileWidth,
+          cloneIndex: cloneNumber,
+          takozIndex: '34', // They are not at the takoz but we continue indexing them from 30.
+          tileNumber: tileNumber,
+          tileColor: tileColor == 'R' // If R, red,
+              ? Colors.red
+              : tileColor == 'K' // If K, black
+              ? Colors.black
+              : tileColor == 'B' // If B, blue
+              ? Colors.blue
+              : tileColor == 'Y' // If Y, yellow
+              ? Colors.orange
+              : Colors.green, // Else, (In joker situation) its green.
+          numberL: tilesRemaining,
+        );
+
+      }
+      else{
+
+        midRummyTile = TurnpassedMiddleTile(
+          rummyTileHeight: rummyTileHeight,
+          rummyTileWidth: rummyTileWidth,
+          cloneIndex: cloneNumber,
+          takozIndex: '34', // They are not at the takoz but we continue indexing them from 30.
+          tileNumber: tileNumber,
+          tileColor: tileColor == 'R' // If R, red,
+              ? Colors.red
+              : tileColor == 'K' // If K, black
+              ? Colors.black
+              : tileColor == 'B' // If B, blue
+              ? Colors.blue
+              : tileColor == 'Y' // If Y, yellow
+              ? Colors.orange
+              : Colors.green, // Else, (In joker situation) its green.
+          numberL: tilesRemaining,
+        );
+
+
+      }
+
+
     }
 
     // Okey tile
@@ -806,6 +913,7 @@ class _RummikubScreenState extends State<RummikubScreen> {
     String strTilesTakoz = '';
     String strTilesThrown = '';
     String strMiddleTiles = '';
+    String strUserTurn = '';
 
 
     timer = Timer.periodic(const Duration(milliseconds: 100), (Timer timer) {
@@ -819,14 +927,16 @@ class _RummikubScreenState extends State<RummikubScreen> {
           strTilesTakoz = array[1];
           strTilesThrown = array[2];
           strMiddleTiles = array[3];
+          strUserTurn = array[4];
         }
 
         String checker = strChecker;    // We get the checker here.
         List<String> tilesTakoz = strTilesTakoz.split('|'); // We parse the tiles on takoz here.
         List<String> tilesThrown = strTilesThrown.split('|');    // We parse the tiles thrown to board here.
         List<String> middleTiles = strMiddleTiles.split('|');    // We parse the middle tiles here.
+        String userTurn = strUserTurn;    // We get the username of this turn.
 
-        RummikubData newRummikubData = RummikubData(checker, tilesTakoz, tilesThrown, middleTiles);
+        RummikubData newRummikubData = RummikubData(checker, tilesTakoz, tilesThrown, middleTiles, userTurn);
 
         _sendBoardRequest();
         // We update the all data.
@@ -854,10 +964,27 @@ class _RummikubScreenState extends State<RummikubScreen> {
         print("Second Floor Length: ${secondFloor.length}");*/
 
 
-        constructThrown(rmtH, rmtW);
+        numberOfTiles = getNumberOfTiles(tilesTakoz); // Updates the number of tiles
+        print('IMDATT :::: $numberOfTiles');
 
-        constructMiddle(rmtH, rmtW);
+        if(numberOfTiles == 14){ // When user have 15 tile on board, we should make get turn false.
+          checkPlayerTurn(userTurn);
+          isGet = false;
+        }
+        else if(numberOfTiles == 15){
+          isTurn = false;
+          isGet = true;
 
+        }
+
+
+        constructThrown(rmtH, rmtW, isTurn, isGet);
+
+        constructMiddle(rmtH, rmtW, isTurn);
+
+
+
+        print('ISTURN: $isTurn');
         checkAnyRummyClicked();
 
         checkAnyEmptyClicked();
@@ -888,12 +1015,22 @@ class _RummikubScreenState extends State<RummikubScreen> {
               TurnbasedMiddleRummyTileGlobals.clickedTileIndex = -1;
 
               anyEmptyClicked = false;
+
+              // Getting turn is passed. Now its time to throw.
+              isTurn = false;
+              isGet = true;
+
             }
 
 
           }
 
         }
+
+        // If moved, we need to construct them again.
+        constructThrown(rmtH, rmtW, isTurn, isGet);
+
+        constructMiddle(rmtH, rmtW, isTurn);
 
         // Checks if user get tile from left.
         if(TurnbasedClickableRummyTileGlobals.isAnyClicked){ // Soldaki taş index = 33;
@@ -918,11 +1055,21 @@ class _RummikubScreenState extends State<RummikubScreen> {
               TurnbasedClickableRummyTileGlobals.clickedTileIndex = -1;
 
               anyEmptyClicked = false;
+
+              // Getting turn is passed. Now its time to throw.
+              isTurn = false;
+              isGet = true;
+
             }
 
           }
 
         }
+
+        // If moved, we need to construct them again.
+        constructThrown(rmtH, rmtW, isTurn, isGet);
+
+        constructMiddle(rmtH, rmtW, isTurn);
 
 
         // This function checks if user thrown any tile to board.
@@ -930,7 +1077,7 @@ class _RummikubScreenState extends State<RummikubScreen> {
 
           if(toTile == 30){ // If right tile is selected after that,
 
-            String thrownTileStr = tilesTakoz[fromTile]; // Gets the cliked tile,
+            String thrownTileStr = tilesTakoz[fromTile]; // Gets the clicked tile,
 
 
             print('THROWN:$thrownTileStr');
@@ -945,9 +1092,18 @@ class _RummikubScreenState extends State<RummikubScreen> {
 
             ClickableRummyTileGlobals.clickedTileIndex = -1;
 
+            // Its thrown. All turns passed
+            isTurn = false;
+            isGet = false;
+
           }
 
         }
+
+        // If moved, we need to construct them again.
+        constructThrown(rmtH, rmtW, isTurn, isGet);
+
+        constructMiddle(rmtH, rmtW, isTurn);
 
         updateFromTile();
 

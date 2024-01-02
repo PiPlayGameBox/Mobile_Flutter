@@ -87,7 +87,7 @@ class Cell extends StatelessWidget{
   // Moves from capture area to starting cell's don't actually require restriction but given anyway.
   // The same is also valid for safe area to safe area moves.
   // Move maps has only the keys which has at least 1 possible move.
-  static List<List<Map?>> moveSetDict=[
+  static List<List< Map< int, List<List<dynamic>> >? >> moveSetDict=[
 
     // Row 0
     [
@@ -124,11 +124,7 @@ class Cell extends StatelessWidget{
 
     // Row 1
     [
-      null,
-      {6: [[6, 0, Player.red]]}, // Col 1
-      null,
-      {6: [[6, 0, Player.red]]}, // Col 3
-      null, null,
+      null, null, null, null, null, null,
       // Col 6
       {
         1: [[0, 6, null]],
@@ -154,16 +150,15 @@ class Cell extends StatelessWidget{
         5: [[6, 9, null]],
         6: [[6, 10, null]]
       },
-      null, null,
-      {6: [[0, 8, Player.grn]]}, // Col 11
-      null,
-      {6: [[0, 8, Player.grn]]}, // Col 13
-      null
+      null, null, null, null, null, null
     ],
 
     // Row 2
     [
-      null, null, null, null, null, null,
+      null, null,
+      {6: [[6, 0, Player.red]]}, // Col 2
+      {6: [[6, 0, Player.red]]}, // Col 3
+      null, null,
       // Col 6
       {
         1: [[1, 6, null]],
@@ -188,14 +183,16 @@ class Cell extends StatelessWidget{
         5: [[6, 10, null]],
         6: [[6, 11, null]]
       },
-      null, null, null, null, null, null
+      null, null,
+      {6: [[0, 8, Player.grn]]}, // Col 11
+      {6: [[0, 8, Player.grn]]}, // Col 12
+      null, null
     ],
 
     // Row 3
     [
-      null,
-      {6: [[6, 0, Player.red]]}, // Col 1
-      null,
+      null, null,
+      {6: [[6, 0, Player.red]]}, // Col 2
       {6: [[6, 0, Player.red]]}, // Col 3
       null, null,
       // Col 6
@@ -223,9 +220,8 @@ class Cell extends StatelessWidget{
       },
       null, null,
       {6: [[0, 8, Player.grn]]}, // Col 11
-      null,
-      {6: [[0, 8, Player.grn]]}, // Col 13
-      null
+      {6: [[0, 8, Player.grn]]}, // Col 12
+      null, null
     ],
 
     // Row 4
@@ -276,7 +272,6 @@ class Cell extends StatelessWidget{
       }
     ],
 
-    // TODO: Bunları doldur.
     // Row 6
     [
       // Col 0
@@ -647,7 +642,10 @@ class Cell extends StatelessWidget{
 
     // Row 12
     [
-      null, null, null, null, null, null,
+      null, null,
+      {6: [[14, 6, Player.blu]]}, // Col 2
+      {6: [[14, 6, Player.blu]]}, // Col 3
+      null, null,
       // Col 6
       {
         1: [[11, 6, null]],
@@ -672,7 +670,10 @@ class Cell extends StatelessWidget{
         5: [[13, 6, null], [12, 7, Player.blu]],
         6: [[12, 6, null], [11, 7, Player.blu]]
       },
-      null, null, null, null, null, null
+      null, null,
+      {6: [[8, 14, Player.ylw]]}, // Col 11
+      {6: [[8, 14, Player.ylw]]}, // Col 12
+      null, null
     ],
 
     // Row 13

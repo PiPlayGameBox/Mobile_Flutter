@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 String respToken = '0';
+String userName = '';
 
 class LobbiesScreen extends StatefulWidget {
   static String routeName = '/lobbies';
@@ -125,7 +126,7 @@ class _LobbiesScreenState extends State<LobbiesScreen> {
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => LudoScreen(/*token: respToken,*/)),
+                            builder: (context) => LudoScreen(token: respToken,playerInfo: {'R':'ali', 'g':'veli', 'y':'ayşe', 'b':'fatma'},)),
                       ),
                       roomData: RoomData(
                         'Lobby1','LUDO','pass123',['p1','p2','Cool player B)']
@@ -136,7 +137,7 @@ class _LobbiesScreenState extends State<LobbiesScreen> {
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => RummikubScreen(token: respToken,), /*{
+                            builder: (context) => RummikubScreen(token: respToken,userName: 'huseyin'), /*{
                               return FutureBuilder(
                                 future: Provider.of<RummikubDataProvider>(context).fetchData(),
                                 builder: (context, snapshot) {

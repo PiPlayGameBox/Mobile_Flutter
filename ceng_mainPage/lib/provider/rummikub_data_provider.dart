@@ -30,10 +30,11 @@ class RummikubDataProvider extends ChangeNotifier{
 }
 
 class RummikubData{
-  RummikubData(this.checker, this.tilesTakoz, this.tilesThrown, this.middleTiles);
+  RummikubData(this.checker, this.tilesTakoz, this.tilesThrown, this.middleTiles, this.userTurn);
 
   late String checker;
   late List<String> tilesTakoz;
   late List<String> tilesThrown;
   late List<String> middleTiles;
+  late String userTurn;
 }
