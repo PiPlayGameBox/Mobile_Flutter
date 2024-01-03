@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
 import 'player.dart';
-//import 'package:flutter/cupertino.dart';
 
-
-// TODO: Immutable class? Belki stateless olduğundandır.
 class Cell {
 
-  // TODO: bu renkler gerçek board'a göre ayarlancak.
   static Color blu=Colors.blue;
   static Color red=Colors.red;
   static Color grn=Colors.green;
@@ -551,7 +547,10 @@ class Cell {
 
     // Row 11
     [
-      null, null, null, null, null, null,
+      null, null,
+      {6: [[14, 6, Player.blu]]}, // Col 2
+      {6: [[14, 6, Player.blu]]}, // Col 3
+      null, null,
       // Col 6
       {
         1: [[10, 6, null]],
@@ -575,7 +574,10 @@ class Cell {
         5: [[14, 6, null], [13, 7, Player.blu]],
         6: [[13, 6, null], [12, 7, Player.blu]]
       },
-      null, null, null, null, null, null
+      null, null,
+      {6: [[8, 14, Player.ylw]]}, // Col 11
+      {6: [[8, 14, Player.ylw]]}, // Col 12
+      null, null
     ],
 
     // Row 12
@@ -660,10 +662,11 @@ class Cell {
       // Col 7
       {
         1: [[14, 6, null], [13, 7, Player.blu]],
-        2: [[12, 7, Player.blu]],
-        3: [[11, 7, Player.blu]],
-        4: [[10, 7, Player.blu]],
-        5: [[9, 7, Player.blu]]
+        2: [[13, 6, null], [12, 7, Player.blu]],
+        3: [[12, 6, null], [11, 7, Player.blu]],
+        4: [[11, 6, null], [10, 7, Player.blu]],
+        5: [[10, 6, null], [9, 7, Player.blu]],
+        6: [[9, 6, null]]
       },
       // Col 8
       {
@@ -677,9 +680,5 @@ class Cell {
       null, null, null, null, null, null
     ],
   ];
-
-  Player? player;
-  int? pawnNum;
-
 }
 
