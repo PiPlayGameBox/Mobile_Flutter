@@ -25,7 +25,6 @@ const YELLOW_PAWN_BASE_1_INDEX = 177;
 const YELLOW_PAWN_BASE_2_INDEX = 191;
 const YELLOW_PAWN_BASE_3_INDEX = 192;
 
-String piIP = '10.42.0.1';
 
 class LudoScreen extends StatefulWidget {
   const LudoScreen({Key? key, required this.token, required this.playerInfo}) : super(key: key);
@@ -151,7 +150,7 @@ class _LudoScreenState extends State<LudoScreen> {
   int currentImageIndex = 0;
   double diceTransformValue = 0;
   static const int counterTimerMax=12;
-  static const int diceDurationMillis=30;
+  static const int diceDurationMillis=120;
 
   List<String> diceImages = [
     "assets/images/dice_0.png",
@@ -167,35 +166,35 @@ class _LudoScreenState extends State<LudoScreen> {
   // May do additional things depending on the reqType.
   void sendRequest({required String reqType, required String request}) async {
     try{
-      Socket sock=await Socket.connect(piIP, 8080); //  10.42.0.1
+      Socket sock=await Socket.connect("10.42.0.1", 8080); //  127.0.0.1
       sock.write(request);
 
       sock.listen(
-        (List<int> data) {
-          String receivedData=String.fromCharCodes(data);
-          sock.close();
+              (List<int> data) {
+            String receivedData=String.fromCharCodes(data);
+            sock.close();
 
-          print("Received data is: $receivedData");
+            //print("Received data is: $receivedData");
 
-          switch(reqType){
-            case "GETLUDO":
-              handleGetLudo(receivedData);
-              break;
-          }
-        },
-        onDone: () {
-          print("Socket is closed.");
-        },
-        onError: (e) {
-          sock.close();
-          print("An error occurred while sending the following request:\n$request");
-          print('Error: $e');
-        },
-        cancelOnError: true
+            switch(reqType){
+              case "GETLUDO":
+                handleGetLudo(receivedData);
+                break;
+            }
+          },
+          onDone: () {
+            //print("Socket is closed.");
+          },
+          onError: (e) {
+            sock.close();
+            //print("An error occurred while sending the following request:\n$request");
+            //print('Error: $e');
+          },
+          cancelOnError: true
       );
     }
     catch(error){
-      print("An error occurred while opening/writing socket.");
+      //print("An error occurred while opening/writing socket.");
     }
   }
 
@@ -305,17 +304,9 @@ class _LudoScreenState extends State<LudoScreen> {
           targetIndex = moveList[1][0] * 15 + moveList[1][1];
           targetClr = moveList[1][2];
 
-
-          if (checkRestriction(targetClr)) {
-            if(checkCollision(targetIndex)){
-              return targetIndex;
-            }
-            else{
-              return -1;
-            }
+          if (checkCollision(targetIndex) && checkRestriction(targetClr)) {
+            return targetIndex;
           }
-
-
         }
 
         // Check the first move.
@@ -370,7 +361,7 @@ class _LudoScreenState extends State<LudoScreen> {
     Timer.periodic(const Duration(milliseconds: diceDurationMillis), (timer) {
       counterTimer++;
       setState(() {
-        currentImageIndex = 6/*1 + rng.nextInt(6)*/;
+        currentImageIndex = 1 + rng.nextInt(6);
         diceTransformValue = rng.nextDouble() * 180;
       });
       if (counterTimer == counterTimerMax) {
@@ -423,7 +414,7 @@ class _LudoScreenState extends State<LudoScreen> {
         }
       }
       else { // touched pawnIndex!=-1
-        if (highlightedTilePositions.contains(index)) {
+        if (highlightedTilePositions.contains(touchedPawnIndex)) {
           if (touchedPawnIndex == index) {
             setState(() {
               touchedPawnIndex = -1;
@@ -439,21 +430,26 @@ class _LudoScreenState extends State<LudoScreen> {
           }
           // touchedPawnIndex != index
           else {
+            String meAgain = (dice == 6 ? 'T' : 'F');
+            int movedPawnNum = pawnPositions.indexOf(touchedPawnIndex);
+            int movedPawnLogInd = convertPhysicalIndex2Logical(index);
+            String moveRequest = "MAKEMOVE|${widget.token}|$meAgain|$movedPawnNum|$movedPawnLogInd";
+
+            // For capture case
+            if(pawnPositions.contains(index)){
+              int eatenPawnNum = pawnPositions.indexOf(index);
+              int eatenPawnLogInd = convertPhysicalIndex2Logical(initialPawnPositions[eatenPawnNum]);
+              moveRequest += "|$eatenPawnNum|$eatenPawnLogInd";
+            }
+
+            // Send the performed move.
+            sendRequest(reqType: "MAKEMOVE", request: moveRequest);
+
             setState(() {
-              String meAgain = (dice == 6 ? 'T' : 'F');
-              int movedPawnNum = pawnPositions.indexOf(touchedPawnIndex);
-              int movedPawnLogInd = convertPhysicalIndex2Logical(index);
-              String moveRequest = "MAKEMOVE|${widget.token}|$meAgain|$movedPawnNum|$movedPawnLogInd";
-              print("Mve Req: $moveRequest");
-              // Capture case.
+              // For capture case
               if (pawnPositions.contains(index)) {
                 int eatenPawnNum = pawnPositions.indexOf(index);
-                int eatenPawnLogInd = convertPhysicalIndex2Logical(initialPawnPositions[eatenPawnNum]);
-                moveRequest += "|$eatenPawnNum|$eatenPawnLogInd";
-
-                // First make capture
-                pawnPositions[eatenPawnNum] =
-                initialPawnPositions[eatenPawnNum];
+                pawnPositions[eatenPawnNum] = initialPawnPositions[eatenPawnNum];
               }
 
               // Make the main move
@@ -462,9 +458,6 @@ class _LudoScreenState extends State<LudoScreen> {
               dice = 0;
               touchedPawnIndex = -1;
               highlightedTilePositions.clear();
-
-              // Send the performed move.
-              sendRequest(reqType: "MAKEMOVE", request: moveRequest);
             });
 
             if(didIwin()){
@@ -472,6 +465,9 @@ class _LudoScreenState extends State<LudoScreen> {
             }
 
             // Get the new board.
+            // MAKEMOVE and IWON requests "MUST" arrive to server before the following GETLUDO.
+            // Increase the duration if necessary.
+            await Future.delayed(Duration(milliseconds: 600));
             sendRequest(reqType: "GETLUDO", request: "GETLUDO|${widget.token}");
           }
         }
@@ -573,21 +569,21 @@ class _LudoScreenState extends State<LudoScreen> {
                           Text(
                             (myName==strTurnName) ? "Your" : strTurnColor,
                             style: TextStyle(
-                            color: () {
-                              if (strTurnColor == "Red") {
-                                return Colors.red[900];
-                              } else if (strTurnColor == "Green") {
-                                return Colors.green[900];
-                              } else if (strTurnColor == "Yellow") {
-                                return Colors.yellow[900];
-                              } else if (strTurnColor == "Blue") {
-                                return Colors.blue[900];
-                              } else {
-                                return Colors.black;
-                              }
-                            }(),
-                            fontWeight: FontWeight.bold,
-                            fontSize: turnInfoHeight * 0.35),
+                                color: () {
+                                  if (strTurnColor == "Red") {
+                                    return Colors.red[900];
+                                  } else if (strTurnColor == "Green") {
+                                    return Colors.green[900];
+                                  } else if (strTurnColor == "Yellow") {
+                                    return Colors.yellow[900];
+                                  } else if (strTurnColor == "Blue") {
+                                    return Colors.blue[900];
+                                  } else {
+                                    return Colors.black;
+                                  }
+                                }(),
+                                fontWeight: FontWeight.bold,
+                                fontSize: turnInfoHeight * 0.35),
                           ),
                           SizedBox(
                             width: size.width * 0.04,
@@ -652,47 +648,47 @@ class _LudoScreenState extends State<LudoScreen> {
                           physics: const NeverScrollableScrollPhysics(),
                           itemCount: 15 * 15,
                           gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 15),
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 15),
                           itemBuilder: (context, index) {
                             if (pawnPositions.sublist(0, 4).contains(index)) {
                               return GestureDetector(
                                 onTap: convertPhysicalIndex2Logical(index) != -1
                                     ? () {
-                                        gridOnTap(index);
-                                      }
+                                  gridOnTap(index);
+                                }
                                     : null,
                                 child: Padding(
                                   padding: EdgeInsets.all(boardHeight * 0.008),
                                   child:
-                                      highlightedTilePositions.contains(index)
-                                          ? DottedBorder(
-                                              borderType: BorderType.RRect,
-                                              strokeWidth: 2,
-                                              color: Colors.black,
-                                              child: SizedBox(
-                                                height: boardHeight * 0.06,
-                                                width: boardHeight * 0.06,
-                                                child: Transform.rotate(
-                                                  angle: -transformValue,
-                                                  child: const Image(
-                                                    image: AssetImage(
-                                                        'assets/images/red_pawn.png'),
-                                                  ),
-                                                ),
-                                              ),
-                                            )
-                                          : SizedBox(
-                                              height: boardHeight * 0.06,
-                                              width: boardHeight * 0.06,
-                                              child: Transform.rotate(
-                                                angle: -transformValue,
-                                                child: const Image(
-                                                  image: AssetImage(
-                                                      'assets/images/red_pawn.png'),
-                                                ),
-                                              ),
-                                            ),
+                                  highlightedTilePositions.contains(index)
+                                      ? DottedBorder(
+                                    borderType: BorderType.RRect,
+                                    strokeWidth: 2,
+                                    color: Colors.black,
+                                    child: SizedBox(
+                                      height: boardHeight * 0.06,
+                                      width: boardHeight * 0.06,
+                                      child: Transform.rotate(
+                                        angle: -transformValue,
+                                        child: const Image(
+                                          image: AssetImage(
+                                              'assets/images/red_pawn.png'),
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                      : SizedBox(
+                                    height: boardHeight * 0.06,
+                                    width: boardHeight * 0.06,
+                                    child: Transform.rotate(
+                                      angle: -transformValue,
+                                      child: const Image(
+                                        image: AssetImage(
+                                            'assets/images/red_pawn.png'),
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               );
                             } else if (pawnPositions
@@ -701,120 +697,120 @@ class _LudoScreenState extends State<LudoScreen> {
                               return GestureDetector(
                                 onTap: convertPhysicalIndex2Logical(index) != -1
                                     ? () {
-                                        gridOnTap(index);
-                                      }
+                                  gridOnTap(index);
+                                }
                                     : null,
                                 child: Padding(
                                   padding: EdgeInsets.all(boardHeight * 0.008),
                                   child:
-                                      highlightedTilePositions.contains(index)
-                                          ? DottedBorder(
-                                              borderType: BorderType.RRect,
-                                              strokeWidth: 2,
-                                              color: Colors.black,
-                                              child: SizedBox(
-                                                height: boardHeight * 0.06,
-                                                width: boardHeight * 0.06,
-                                                child: Transform.rotate(
-                                                  angle: -transformValue,
-                                                  child: const Image(
-                                                    image: AssetImage(
-                                                        'assets/images/green_pawn.png'),
-                                                  ),
-                                                ),
-                                              ),
-                                            )
-                                          : SizedBox(
-                                              height: boardHeight * 0.06,
-                                              width: boardHeight * 0.06,
-                                              child: Transform.rotate(
-                                                angle: -transformValue,
-                                                child: const Image(
-                                                  image: AssetImage(
-                                                      'assets/images/green_pawn.png'),
-                                                ),
-                                              ),
-                                            ),
+                                  highlightedTilePositions.contains(index)
+                                      ? DottedBorder(
+                                    borderType: BorderType.RRect,
+                                    strokeWidth: 2,
+                                    color: Colors.black,
+                                    child: SizedBox(
+                                      height: boardHeight * 0.06,
+                                      width: boardHeight * 0.06,
+                                      child: Transform.rotate(
+                                        angle: -transformValue,
+                                        child: const Image(
+                                          image: AssetImage(
+                                              'assets/images/green_pawn.png'),
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                      : SizedBox(
+                                    height: boardHeight * 0.06,
+                                    width: boardHeight * 0.06,
+                                    child: Transform.rotate(
+                                      angle: -transformValue,
+                                      child: const Image(
+                                        image: AssetImage(
+                                            'assets/images/green_pawn.png'),
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               );
                             } else if (pawnPositions.sublist(8, 12).contains(index)) {
                               return GestureDetector(
                                 onTap: convertPhysicalIndex2Logical(index) != -1
                                     ? () {
-                                        gridOnTap(index);
-                                      }
+                                  gridOnTap(index);
+                                }
                                     : null,
                                 child: Padding(
                                   padding: EdgeInsets.all(boardHeight * 0.008),
                                   child:
-                                      highlightedTilePositions.contains(index)
-                                          ? DottedBorder(
-                                              borderType: BorderType.RRect,
-                                              strokeWidth: 2,
-                                              color: Colors.black,
-                                              child: SizedBox(
-                                                height: boardHeight * 0.06,
-                                                width: boardHeight * 0.06,
-                                                child: Transform.rotate(
-                                                  angle: -transformValue,
-                                                  child: const Image(
-                                                    image: AssetImage(
-                                                        'assets/images/yellow_pawn.png'),
-                                                  ),
-                                                ),
-                                              ),
-                                            )
-                                          : SizedBox(
-                                              height: boardHeight * 0.06,
-                                              width: boardHeight * 0.06,
-                                              child: Transform.rotate(
-                                                angle: -transformValue,
-                                                child: const Image(
-                                                  image: AssetImage(
-                                                      'assets/images/yellow_pawn.png'),
-                                                ),
-                                              ),
-                                            ),
+                                  highlightedTilePositions.contains(index)
+                                      ? DottedBorder(
+                                    borderType: BorderType.RRect,
+                                    strokeWidth: 2,
+                                    color: Colors.black,
+                                    child: SizedBox(
+                                      height: boardHeight * 0.06,
+                                      width: boardHeight * 0.06,
+                                      child: Transform.rotate(
+                                        angle: -transformValue,
+                                        child: const Image(
+                                          image: AssetImage(
+                                              'assets/images/yellow_pawn.png'),
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                      : SizedBox(
+                                    height: boardHeight * 0.06,
+                                    width: boardHeight * 0.06,
+                                    child: Transform.rotate(
+                                      angle: -transformValue,
+                                      child: const Image(
+                                        image: AssetImage(
+                                            'assets/images/yellow_pawn.png'),
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               );
                             } else if (pawnPositions.sublist(12, 16).contains(index)) {
                               return GestureDetector(
                                 onTap: convertPhysicalIndex2Logical(index) != -1
-                                  ? () {
-                                      gridOnTap(index);
-                                    }
-                                  : null,
+                                    ? () {
+                                  gridOnTap(index);
+                                }
+                                    : null,
                                 child: Padding(
                                   padding: EdgeInsets.all(boardHeight * 0.008),
                                   child:
-                                      highlightedTilePositions.contains(index)
-                                          ? DottedBorder(
-                                              borderType: BorderType.RRect,
-                                              strokeWidth: 2,
-                                              color: Colors.black,
-                                              child: SizedBox(
-                                                height: boardHeight * 0.06,
-                                                width: boardHeight * 0.06,
-                                                child: Transform.rotate(
-                                                  angle: -transformValue,
-                                                  child: const Image(
-                                                    image: AssetImage(
-                                                        'assets/images/blue_pawn.png'),
-                                                  ),
-                                                ),
-                                              ),
-                                            )
-                                          : SizedBox(
-                                              height: boardHeight * 0.06,
-                                              width: boardHeight * 0.06,
-                                              child: Transform.rotate(
-                                                angle: -transformValue,
-                                                child: const Image(
-                                                  image: AssetImage(
-                                                      'assets/images/blue_pawn.png'),
-                                                ),
-                                              ),
-                                            ),
+                                  highlightedTilePositions.contains(index)
+                                      ? DottedBorder(
+                                    borderType: BorderType.RRect,
+                                    strokeWidth: 2,
+                                    color: Colors.black,
+                                    child: SizedBox(
+                                      height: boardHeight * 0.06,
+                                      width: boardHeight * 0.06,
+                                      child: Transform.rotate(
+                                        angle: -transformValue,
+                                        child: const Image(
+                                          image: AssetImage(
+                                              'assets/images/blue_pawn.png'),
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                      : SizedBox(
+                                    height: boardHeight * 0.06,
+                                    width: boardHeight * 0.06,
+                                    child: Transform.rotate(
+                                      angle: -transformValue,
+                                      child: const Image(
+                                        image: AssetImage(
+                                            'assets/images/blue_pawn.png'),
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               );
                             }
@@ -822,8 +818,8 @@ class _LudoScreenState extends State<LudoScreen> {
                               return GestureDetector(
                                 onTap: convertPhysicalIndex2Logical(index) != -1
                                     ? () {
-                                        gridOnTap(index);
-                                      }
+                                  gridOnTap(index);
+                                }
                                     : null,
                                 child: Padding(
                                   padding: EdgeInsets.all(boardHeight * 0.008),
