@@ -6,13 +6,13 @@ import 'package:ceng_mainpage/provider/rummikub_data_provider.dart';
 import 'package:ceng_mainpage/responsive/responsive.dart';
 import 'package:ceng_mainpage/screen/ludo_screen.dart';
 import 'package:ceng_mainpage/screen/rummikub_screen.dart';
+import 'package:ceng_mainpage/screens/login_screen.dart';
 import 'package:ceng_mainpage/util/color.dart';
 import 'package:ceng_mainpage/widget/custom_text.dart';
 import 'package:ceng_mainpage/widget/lobby.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-String respToken = '0';
 String usernameToken = 'huseyin';
 String printResponseLogin = '';
 
@@ -39,53 +39,7 @@ class _LobbiesScreenState extends State<LobbiesScreen> {
   @override
   void initState() {
     super.initState();
-    _sendTCPRequest();
   }
-
-  void _sendTCPRequest() async {
-    try {
-      // Create a new socket for each request
-      Socket _socket = await Socket.connect('10.42.0.1', 8080); // 127.0.0.1 ...... 10.42.0.1
-
-      // Send a simple message to the server
-      _socket.write('LOGIN|$usernameToken|123456');
-
-      // Listen for responses from the server
-      _socket.listen(
-            (List<int> data) {
-          // Convert the received data to a String
-          String response = utf8.decode(data);
-
-          // Update the UI with the received response
-          print('Received from server: $response');
-
-          printResponseLogin = response;
-
-          List<String> parts = response.split('|');
-
-          setState(() {
-            respToken = parts[1];
-          });
-
-          // Close the socket after receiving a response
-          _socket.close();
-        },
-        onDone: () {
-          // Handle when the server closes the connection
-          print('Server closed the connection');
-        },
-        onError: (error) {
-          // Handle any errors that occur during communication
-          print('Error receiving response: $error');
-          // Close the socket in case of an error
-          _socket.close();
-        },
-      );
-    } catch (e) {
-      print('Error sending request: $e');
-    }
-  }
-
 
   // To prevent memory leaks.
   @override
@@ -132,7 +86,7 @@ class _LobbiesScreenState extends State<LobbiesScreen> {
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => LudoScreen(token: respToken,playerInfo: {'r':'huseyin', 'g':'doruk', 'y':'abdullah', 'B':'samet'},)),
+                            builder: (context) => LudoScreen(token: loginGlobals.token,playerInfo: {'r':'huseyin', 'g':'doruk', 'y':'abdullah', 'B':'samet'},)),
                       ),
                       roomData: RoomData(
                         'Lobby1','LUDO','pass123',['p1','p2','Cool player B)']
@@ -143,21 +97,7 @@ class _LobbiesScreenState extends State<LobbiesScreen> {
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => RummikubScreen(token: respToken,userName: usernameToken), /*{
-                              return FutureBuilder(
-                                future: Provider.of<RummikubDataProvider>(context).fetchData(),
-                                builder: (context, snapshot) {
-                                  if (snapshot.connectionState == ConnectionState.waiting) {
-                                    // If the future is still running, show a loading indicator or any other widget
-                                    return const CircularProgressIndicator(backgroundColor: bgColor,);
-                                  } else {
-                                    // If the future is complete, navigate to the RummikubScreen
-                                    List<RummikubData> fData = Provider.of<RummikubDataProvider>(context).fData;
-                                    return RummikubScreen();
-                                  }
-                                },
-                              );
-                            },*//*=> const RummikubScreen()),*/
+                            builder: (context) => RummikubScreen(token: loginGlobals.token,userName: loginGlobals.username),
                         ),
                       ),
                       roomData: RoomData(

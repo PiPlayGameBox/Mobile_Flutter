@@ -1,8 +1,22 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:ceng_mainpage/main.dart';
+import 'package:ceng_mainpage/screen/lobbies_screen.dart';
 import 'package:ceng_mainpage/screen/main_menu_screen.dart';
 import 'package:ceng_mainpage/screens/CustomButton.dart';
 import 'package:ceng_mainpage/screens/signup_screen.dart';
 import 'package:flutter/material.dart';
+
+class loginGlobals{
+
+  static String username = '';
+  static String password = '';
+  static String token = 'empty';
+  static const String piIP = '10.42.0.1';
+
+}
+
 
 class LoginScreen extends StatefulWidget {
   static String routeName = '/login';
@@ -16,34 +30,85 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final userNameController = TextEditingController();
   final passwordController = TextEditingController();
+  String loginSuccess = 'ERROR';
+  String loginMessage = 'Log-In for fun!';
 
-  Future<bool> onSignIn() async {
+  @override
+  void initState() {
+    super.initState();
+  }
 
-    if (usersMap.containsKey(userNameController.text)) {
-      if (usersMap[userNameController.text] == passwordController.text) {
-        await Future.delayed(const Duration(seconds: 1));
-        return true;
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("The username or password is not correct."),
-            behavior: SnackBarBehavior.floating,
-            duration: Duration(seconds: 2),
-          ),
-        );
-        await Future.delayed(const Duration(seconds: 1));
-        return false;
-      }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("The username or password is not correct."),
-          behavior: SnackBarBehavior.floating,
-          duration: Duration(seconds: 2),
-        ),
+  String createLoginRequestMessage(String username, String password){ // Login request string creater.
+
+    String created = '';
+
+    const String login = 'LOGIN|';
+
+    created += login;
+
+    created += username;
+
+    created += '|';
+
+    created += password;
+
+    return created;
+  }
+
+  void _sendLoginRequest(String loginReq) async {
+    try {
+      // Create a new socket for each request
+      Socket _socket = await Socket.connect(loginGlobals.piIP, 8080); // 127.0.0.1 ...... 10.42.0.1
+
+      // Send a simple message to the server
+      _socket.write(loginReq);
+
+      // Listen for responses from the server
+      _socket.listen(
+            (List<int> data) {
+          // Convert the received data to a String
+          String response = utf8.decode(data);
+
+          // Update the UI with the received response
+          print('Received from server: $response');
+
+          List<String> parts = response.split('|');
+
+          setState(() {
+            loginSuccess = parts[0];
+            loginGlobals.token = parts[1];
+
+            if(loginSuccess == 'OK'){
+              loginGlobals.username = userNameController.text;
+              loginGlobals.password = passwordController.text;
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => MainMenuScreen()),
+              );
+            }else if(loginSuccess == 'ERROR'){
+              loginMessage = 'Invalid username or password!';
+            }else{ // Unexpected error.
+              loginMessage = 'Invalid!';
+            }
+          });
+
+          // Close the socket after receiving a response
+          _socket.close();
+        },
+        onDone: () {
+          // Handle when the server closes the connection
+          print('Server closed the connection');
+        },
+        onError: (error) {
+          // Handle any errors that occur during communication
+          print('Error receiving response: $error');
+          // Close the socket in case of an error
+          _socket.close();
+        },
       );
-      await Future.delayed(const Duration(seconds: 1));
-      return false;
+    } catch (e) {
+      print('Error sending request: $e');
     }
   }
 
@@ -75,7 +140,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       color: Colors.grey[750], fontSize: size.width * 0.05),
                 ),
                 Text(
-                  "Log-In for fun!",
+                  loginMessage,
                   style: TextStyle(
                       color: Colors.grey[750], fontSize: size.width * 0.05),
                 ),
@@ -134,15 +199,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 CustomButton(
                     onPress: () async {
-                      bool isSuccess = false;
-                      isSuccess = await onSignIn();
-                      if (isSuccess == true) {
-                        // change screen
-                        Future.delayed(const Duration(milliseconds: 30), () {
-                          Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (context) =>
-                          const MainMenuScreen()), (Route<dynamic> route) => false);
-                        });
-                      }
+                      String inputUsername = userNameController.text;
+                      String inputPassword = passwordController.text;
+
+                      _sendLoginRequest(createLoginRequestMessage(inputUsername, inputPassword));
                     },
                     buttonText: "Sign In",
                     buttonColor: Colors.black,

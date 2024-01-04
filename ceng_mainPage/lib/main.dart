@@ -46,7 +46,7 @@ class MyApp extends StatelessWidget {
           LeaderboardScreen.routeName: (context) => const LeaderboardScreen(),
           /*RummikubScreen.routeName: (context) => const RummikubScreen(),*/
         },
-        initialRoute: MainMenuScreen.routeName,
+        initialRoute: LoginScreen.routeName,
       ),
     );
   }

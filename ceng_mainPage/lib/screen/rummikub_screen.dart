@@ -16,6 +16,7 @@ import 'package:ceng_mainpage/widget/turnpassed_empty_tile.dart';
 import 'package:ceng_mainpage/widget/turnpassed_left_tile.dart';
 import 'package:ceng_mainpage/widget/turnpassed_middle_tile.dart';
 import 'package:ceng_mainpage/widget/turnpassed_right_tile.dart';
+import 'package:ceng_mainpage/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:dotted_border/dotted_border.dart';
@@ -23,13 +24,11 @@ import 'dart:async';
 
 import 'package:provider/provider.dart';
 
-String respToken = '0';
 String resp = '0';
 String exampleResponse = 'OK/E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|/E|E|E|E|/E|E|48/huseyin';
 bool isTurn = false; // Checks if its user's turn. When user gets a tile, this becomes false and makes the isGet true and waits for the user to throw tile.
 bool isGet = false; // Becomes true when tile get from board, becomes false when tile thrown.
 int numberOfTiles = 0;
-String piIP = '10.42.0.1';
 /*'OK/B4_1|Y10_2|B13_1|E|R4_1|R10_1|K11_2|B6_2|E|K9_2|K6_2|E|B12_1|B1_2|E|E|E|E|K5_2|E|E|E|E|E|E|Y5_2|E|E|E|Y13_1|/E|B9_2|Y9_2|Y10_1|/Y4_2|B7_2|47';*/
 /*
   OK, tiles, floor (floor[3]=next tile to get), (spoiler tile to get middle, okey, tiles left.)
@@ -168,8 +167,8 @@ class _RummikubScreenState extends State<RummikubScreen> {
 
     void checkPlayerTurn(String userTurn){
       print('USR turn1: $userTurn');
-      print('widget usr: ${widget.userName}');
-      if(widget.userName == userTurn){
+      print('widget usr: ${loginGlobals.username}');
+      if(loginGlobals.username == userTurn){
         setState(() {
           isTurn = true;
         });
@@ -672,7 +671,7 @@ class _RummikubScreenState extends State<RummikubScreen> {
 
     created += myHand;
 
-    created += respToken;
+    created += loginGlobals.token;
 
     for(int i=0;i<30;i++){
       created += '|';
@@ -690,7 +689,7 @@ class _RummikubScreenState extends State<RummikubScreen> {
 
     created += playTurn;
 
-    created += respToken;
+    created += loginGlobals.token;
 
     created += '|';
 
@@ -707,7 +706,7 @@ class _RummikubScreenState extends State<RummikubScreen> {
 
     created += getStone;
 
-    created += respToken;
+    created += loginGlobals.token;
 
     created += '|';
 
@@ -723,11 +722,9 @@ class _RummikubScreenState extends State<RummikubScreen> {
   void _sendBoardRequest() async {
     try {
       // Create a new socket for each request
-      Socket _socket = await Socket.connect(piIP, 8080);
-      //print('Token::::');
-      //print(respToken);
+      Socket _socket = await Socket.connect(loginGlobals.piIP, 8080);
       // Send a simple message to the server
-      _socket.write('GETGAMEBOARD|$respToken|OKEY');
+      _socket.write('GETGAMEBOARD|${loginGlobals.token}|OKEY');
 
       // Listen for responses from the server
       _socket.listen(
@@ -763,7 +760,7 @@ class _RummikubScreenState extends State<RummikubScreen> {
     try {
       // Create a new socket for each request
       // 10.42.0.1 IP of rasp
-      Socket _socket = await Socket.connect(piIP, 8080);
+      Socket _socket = await Socket.connect(loginGlobals.piIP, 8080);
 
       // Send a simple message to the server
       _socket.write(moveReq);
@@ -801,7 +798,7 @@ class _RummikubScreenState extends State<RummikubScreen> {
     try {
       // Create a new socket for each request
       // 10.42.0.1 IP of rasp
-      Socket _socket = await Socket.connect(piIP, 8080);
+      Socket _socket = await Socket.connect(loginGlobals.piIP, 8080);
 
       // Send a simple message to the server
       _socket.write(throwReq);
@@ -840,7 +837,7 @@ class _RummikubScreenState extends State<RummikubScreen> {
     try {
       // Create a new socket for each request
       // 10.42.0.1 IP of rasp
-      Socket _socket = await Socket.connect(piIP, 8080);
+      Socket _socket = await Socket.connect(loginGlobals.piIP, 8080);
 
       // Send a simple message to the server
       _socket.write(getReq);
@@ -874,50 +871,10 @@ class _RummikubScreenState extends State<RummikubScreen> {
 
   }
 
-  /*void _sendTCPRequest() async {
-    try {
-      // Create a new socket for each request
-      Socket _socket = await Socket.connect('10.42.0.1', 8080);
-
-      // Send a simple message to the server
-      _socket.write('LOGIN|huseyin|123456');
-
-      // Listen for responses from the server
-      _socket.listen(
-            (List<int> data) {
-          // Convert the received data to a String
-          String response = utf8.decode(data);
-
-          // Update the UI with the received response
-          print('Received from server: $response');
-
-          List<String> parts = response.split('|');
-
-          respToken = parts[1];
-          // Close the socket after receiving a response
-          _socket.close();
-        },
-        onDone: () {
-          // Handle when the server closes the connection
-          print('Server closed the connection');
-        },
-        onError: (error) {
-          // Handle any errors that occur during communication
-          print('Error receiving response: $error');
-          // Close the socket in case of an error
-          _socket.close();
-        },
-      );
-    } catch (e) {
-      print('Error sending request: $e');
-    }
-  }*/
-
   // Our initial state is here.
   @override
   void initState(){
     super.initState();
-    respToken = widget.token;
 
     dataProvider = RummikubDataProvider();
 
