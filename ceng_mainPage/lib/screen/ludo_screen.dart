@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:dotted_border/dotted_border.dart';
+import 'package:ceng_mainpage/util/cell.dart';
+import 'package:ceng_mainpage/util/player.dart';
+import 'package:ceng_mainpage/screens/login_screen.dart';
 import 'dart:math';
 import 'dart:async';
 import 'dart:io';
-import 'package:ceng_mainpage/util/cell.dart';
-import 'package:ceng_mainpage/util/player.dart';
 
 
 const RED_PAWN_BASE_0_INDEX = 32;
@@ -27,19 +28,19 @@ const YELLOW_PAWN_BASE_3_INDEX = 192;
 
 
 class LudoScreen extends StatefulWidget {
-  const LudoScreen({Key? key, required this.token, required this.playerInfo}) : super(key: key);
+  const LudoScreen({Key? key, required this.players}) : super(key: key);
 
-  final String token; // Will be initialized in constructor
-
-  // Example playerInfo: {"r":"doruk", "g":"ahmet", "Y":"tuba", "b":"samet"}
-  // Order of colors should be as in example. Uppercase color name is this player.
-  final Map<String, String> playerInfo; // Will be initialized in constructor.
+  final List<String> players;
 
   @override
   State<LudoScreen> createState() => _LudoScreenState();
 }
 
 class _LudoScreenState extends State<LudoScreen> {
+
+  // Example playerInfo: {"r":"doruk", "g":"ahmet", "Y":"tuba", "b":"samet"}
+  Map<String, String> playerInfo={}; // Will be initialized in initState.
+
   int touchedPawnIndex = -1;
   double transformValue = 0;
 
@@ -215,7 +216,7 @@ class _LudoScreenState extends State<LudoScreen> {
       if (strWinner == "empty") {
         strTurnName = lastDice_curTurn_winner_tokens[1];
 
-        for(var entry in widget.playerInfo.entries){
+        for(var entry in playerInfo.entries){
           if(strTurnName==entry.value){
             switch(entry.key){
               case 'r':
@@ -256,7 +257,7 @@ class _LudoScreenState extends State<LudoScreen> {
 
     if(myName!=strTurnName && strWinner=="empty"){
       Future.delayed(const Duration(milliseconds: 500), () {
-        sendRequest(reqType: "GETLUDO", request: "GETLUDO|${widget.token}");
+        sendRequest(reqType: "GETLUDO", request: "GETLUDO|${loginGlobals.token}");
       });
     }
   }
@@ -313,13 +314,8 @@ class _LudoScreenState extends State<LudoScreen> {
         targetIndex = moveList[0][0] * 15 + moveList[0][1];
         targetClr = moveList[0][2];
 
-        if (checkRestriction(targetClr)) {
-          if(checkCollision(targetIndex)){
-            return targetIndex;
-          }
-          else{
-            return -1;
-          }
+        if (checkCollision(targetIndex) && checkRestriction(targetClr)) {
+          return targetIndex;
         }
       }
     }
@@ -382,19 +378,19 @@ class _LudoScreenState extends State<LudoScreen> {
     // Wait for dice animation to complete.
     await Future.delayed(const Duration(milliseconds: diceDurationMillis*(counterTimerMax+2)));
 
-    sendRequest(reqType: "ROLLDICE", request: "ROLLDICE|${widget.token}|$dice");
+    sendRequest(reqType: "ROLLDICE", request: "ROLLDICE|${loginGlobals.token}|$dice");
 
     Map<int, int> moves = getMoves();
 
     if (moves.isEmpty) {
       // No move is made.
-      sendRequest(reqType: "PASSTURN", request: "PASSTURN|${widget.token}");
+      sendRequest(reqType: "PASSTURN", request: "PASSTURN|${loginGlobals.token}");
 
       // Yapabileceği hamle olmayan oyuncu en azından attığı zarın kaç olduğunu
       // görebilsin sıra bir sonraki kişiye geçmeden diye biraz bekle.
       await Future.delayed(const Duration(milliseconds: 1000));
 
-      sendRequest(reqType: "GETLUDO", request: "GETLUDO|${widget.token}");
+      sendRequest(reqType: "GETLUDO", request: "GETLUDO|${loginGlobals.token}");
     }
     else{
       setState(() {
@@ -438,7 +434,7 @@ class _LudoScreenState extends State<LudoScreen> {
             String meAgain = (dice == 6 ? 'T' : 'F');
             int movedPawnNum = pawnPositions.indexOf(touchedPawnIndex);
             int movedPawnLogInd = convertPhysicalIndex2Logical(index);
-            String moveRequest = "MAKEMOVE|${widget.token}|$meAgain|$movedPawnNum|$movedPawnLogInd";
+            String moveRequest = "MAKEMOVE|${loginGlobals.token}|$meAgain|$movedPawnNum|$movedPawnLogInd";
 
             // For capture case
             if(pawnPositions.contains(index)){
@@ -466,14 +462,14 @@ class _LudoScreenState extends State<LudoScreen> {
             });
 
             if(didIwin()){
-              sendRequest(reqType: "IWON", request: "IWON|${widget.token}");
+              sendRequest(reqType: "IWON", request: "IWON|${loginGlobals.token}");
             }
 
             // Get the new board.
             // MAKEMOVE and IWON requests "MUST" arrive to server before the following GETLUDO.
             // Increase the duration if necessary.
             await Future.delayed(Duration(milliseconds: 600));
-            sendRequest(reqType: "GETLUDO", request: "GETLUDO|${widget.token}");
+            sendRequest(reqType: "GETLUDO", request: "GETLUDO|${loginGlobals.token}");
           }
         }
       }
@@ -485,7 +481,33 @@ class _LudoScreenState extends State<LudoScreen> {
     super.initState();
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
-    // From this point on is ADDED.
+    if(widget.players[0]==loginGlobals.username){
+      playerInfo['R']=widget.players[0];
+    }
+    else{
+      playerInfo['r']=widget.players[0];
+    }
+
+    if(widget.players[1]==loginGlobals.username){
+      playerInfo['G']=widget.players[1];
+    }
+    else{
+      playerInfo['g']=widget.players[1];
+    }
+
+    if(widget.players[2]==loginGlobals.username){
+      playerInfo['Y']=widget.players[2];
+    }
+    else{
+      playerInfo['y']=widget.players[2];
+    }
+
+    if(widget.players[3]==loginGlobals.username){
+      playerInfo['B']=widget.players[3];
+    }
+    else{
+      playerInfo['b']=widget.players[3];
+    }
 
     rng = Random();
 
@@ -495,32 +517,32 @@ class _LudoScreenState extends State<LudoScreen> {
     strTurnName="";
     strTurnColor="...";
 
-    for(var entry in widget.playerInfo.entries){
+    for(var entry in playerInfo.entries){
       switch(entry.key){
         case 'R':
-          myName = widget.playerInfo['R']!;
+          myName = playerInfo['R']!;
           myColor = "r";
           transformValue = 0;
           break;
         case 'G':
-          myName = widget.playerInfo['G']!;
+          myName = playerInfo['G']!;
           myColor = "g";
           transformValue = -pi / 2;
           break;
         case 'Y':
-          myName = widget.playerInfo['Y']!;
+          myName = playerInfo['Y']!;
           myColor = "y";
           transformValue = -pi;
           break;
         case 'B':
-          myName = widget.playerInfo['B']!;
+          myName = playerInfo['B']!;
           myColor = "b";
           transformValue = pi / 2;
           break;
       }
     }
 
-    sendRequest(reqType: "GETLUDO", request: "GETLUDO|${widget.token}");
+    sendRequest(reqType: "GETLUDO", request: "GETLUDO|${loginGlobals.token}");
   }
 
   @override
@@ -594,7 +616,7 @@ class _LudoScreenState extends State<LudoScreen> {
                             width: size.width * 0.04,
                           ),
                           Text(
-                            "Dice: ",
+                            "Previous Dice: ",
                             style: TextStyle(fontSize: turnInfoHeight * 0.3),
                           ),
                           SizedBox(
@@ -608,22 +630,6 @@ class _LudoScreenState extends State<LudoScreen> {
                       ),
                     ),
                     const Spacer(),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                      ),
-                      onPressed: () { /* TODO */ },
-                      child: const Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: FittedBox(
-                          fit: BoxFit.fitHeight,
-                          child: Text(
-                            "Quit",
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ),
-                      ),
-                    ),
                     SizedBox(
                       width: size.width * 0.05,
                     ),

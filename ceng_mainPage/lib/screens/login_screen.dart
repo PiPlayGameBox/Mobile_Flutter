@@ -87,9 +87,21 @@ class _LoginScreenState extends State<LoginScreen> {
                     builder: (context) => MainMenuScreen()),
               );
             }else if(loginSuccess == 'ERROR'){
-              loginMessage = 'Invalid username or password!';
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Invalid username or password!'),
+                  behavior: SnackBarBehavior.floating,
+                  duration: Duration(seconds: 2),
+                ),
+              );
             }else{ // Unexpected error.
-              loginMessage = 'Invalid!';
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Invalid!'),
+                  behavior: SnackBarBehavior.floating,
+                  duration: Duration(seconds: 2),
+                ),
+              );
             }
           });
 

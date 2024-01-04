@@ -8,6 +8,19 @@ import 'package:flutter/material.dart';
 import '../responsive/responsive.dart';
 import '../widget/custom_button.dart';
 
+class mainMenuGlobals{
+  static List<String> picList = [
+    /*"assets/images/dice_0.png",
+    "assets/images/dice_1.png",
+    "assets/images/dice_2.png",
+    "assets/images/dice_3.png",
+    "assets/images/dice_4.png",
+    "assets/images/dice_5.png",
+    "assets/images/dice_6.png"*/
+  ];
+}
+
+
 class MainMenuScreen extends StatelessWidget {
   static String routeName = '/main-menu';
   const MainMenuScreen({Key? key}) : super(key: key);
@@ -28,6 +41,7 @@ class MainMenuScreen extends StatelessWidget {
     Navigator.pushNamed(context, LeaderboardScreen.routeName);
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -46,7 +60,7 @@ class MainMenuScreen extends StatelessWidget {
             ),
             const SizedBox(height: 10,), // To separate buttons.
             CustomButton(
-              onTap: () => lobbies(context),
+              onTap: () => lobby(context),
               text: 'Show All Lobbies',
             ),
             const SizedBox(height: 10,), // To separate buttons.

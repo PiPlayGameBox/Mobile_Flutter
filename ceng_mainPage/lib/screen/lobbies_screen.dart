@@ -13,7 +13,6 @@ import 'package:ceng_mainpage/widget/lobby.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-String usernameToken = 'huseyin';
 String printResponseLogin = '';
 
 class LobbiesScreen extends StatefulWidget {
@@ -46,6 +45,8 @@ class _LobbiesScreenState extends State<LobbiesScreen> {
   void dispose() {
     super.dispose();
     _passwordController1.dispose();
+    _passwordController2.dispose();
+    _passwordController3.dispose();
   }
 
   @override
@@ -86,7 +87,7 @@ class _LobbiesScreenState extends State<LobbiesScreen> {
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => LudoScreen(token: loginGlobals.token,playerInfo: {'r':'huseyin', 'g':'doruk', 'y':'abdullah', 'B':'samet'},)),
+                            builder: (context) => LudoScreen(players:['huseyin','doruk','abdullah','samet'] ,)),
                       ),
                       roomData: RoomData(
                         'Lobby1','LUDO','pass123',['p1','p2','Cool player B)']
