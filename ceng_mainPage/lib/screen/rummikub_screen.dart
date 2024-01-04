@@ -12,6 +12,7 @@ import 'package:ceng_mainpage/widget/rummy_tile.dart';
 import 'package:ceng_mainpage/widget/turnbased_clickable_rummy_tile.dart';
 import 'package:ceng_mainpage/widget/turnbased_middle_rummy_tile.dart';
 import 'package:ceng_mainpage/widget/turnbased_right_tile.dart';
+import 'package:ceng_mainpage/widget/turnpassed_empty_tile.dart';
 import 'package:ceng_mainpage/widget/turnpassed_left_tile.dart';
 import 'package:ceng_mainpage/widget/turnpassed_middle_tile.dart';
 import 'package:ceng_mainpage/widget/turnpassed_right_tile.dart';
@@ -209,13 +210,23 @@ class _RummikubScreenState extends State<RummikubScreen> {
 
     // Index 0.  RIGHT TILE (Tile to throw.)
     if(thrown0 == 'E'){
-      rummyTilesOnTheFloorRightBot = EmptyRummyTile(
+
+      if(isGetted){ // User get the tile. Has 15 tiles on takoz.
+        rummyTilesOnTheFloorRightBot = EmptyRummyTile(
           rummyTileHeight: rummyTileHeight,
           rummyTileWidth: rummyTileWidth,
           anyRummyClicked: anyRummyClicked,
           takozIndex: '30',
-/*          isMoved: isMoved,*/
-      );
+        );
+      }
+      else{ // User has 14 tiles on takoz.
+        rummyTilesOnTheFloorRightBot = TurnpassedEmptyTile(
+          rummyTileHeight: rummyTileHeight,
+          rummyTileWidth: rummyTileWidth,
+          takozIndex: '30', // They are not at the takoz but we continue indexing them from 30.
+        );
+      }
+
     }
     else{
 
