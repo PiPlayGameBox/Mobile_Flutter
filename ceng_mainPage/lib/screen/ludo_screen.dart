@@ -313,8 +313,13 @@ class _LudoScreenState extends State<LudoScreen> {
         targetIndex = moveList[0][0] * 15 + moveList[0][1];
         targetClr = moveList[0][2];
 
-        if (checkCollision(targetIndex) && checkRestriction(targetClr)) {
-          return targetIndex;
+        if (checkRestriction(targetClr)) {
+          if(checkCollision(targetIndex)){
+            return targetIndex;
+          }
+          else{
+            return -1;
+          }
         }
       }
     }
