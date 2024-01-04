@@ -25,6 +25,7 @@ const YELLOW_PAWN_BASE_1_INDEX = 177;
 const YELLOW_PAWN_BASE_2_INDEX = 191;
 const YELLOW_PAWN_BASE_3_INDEX = 192;
 
+String piIP = '10.42.0.1';
 
 class LudoScreen extends StatefulWidget {
   const LudoScreen({Key? key, required this.token, required this.playerInfo}) : super(key: key);
@@ -86,9 +87,9 @@ class _LudoScreenState extends State<LudoScreen> {
     19: 99, 20: 100, 21: 101, 22: 102, 23: 103, 24: 104,
     25: 119,
     26: 134, 27: 133, 28: 132, 29: 131, 30: 130, 31: 129,
-    32: 143, 33: 158, 34: 173, 35: 188, 36: 195, 37: 218,
+    32: 143, 33: 158, 34: 173, 35: 188, 36: 203, 37: 218,
     38: 217,
-    39: 216, 40: 195, 41: 186, 42: 171, 43: 156, 44: 141,
+    39: 216, 40: 201, 41: 186, 42: 171, 43: 156, 44: 141,
     45: 125, 46: 124, 47: 123, 48: 122, 49: 121, 50: 120,
     51: 105,
 
@@ -102,7 +103,7 @@ class _LudoScreenState extends State<LudoScreen> {
     68: 106, 69: 107, 70: 108, 71: 109, 72: 110,
     73: 22, 74: 37, 75: 52, 76: 67, 77: 82,
     78: 118, 79: 117, 80: 116, 81: 115, 82: 114,
-    83: 195, 84: 187, 85: 172, 86: 157, 87: 142
+    83: 202, 84: 187, 85: 172, 86: 157, 87: 142
   };
 
   static final Map<String, List<int>> sublistMap = {
@@ -150,7 +151,7 @@ class _LudoScreenState extends State<LudoScreen> {
   int currentImageIndex = 0;
   double diceTransformValue = 0;
   static const int counterTimerMax=12;
-  static const int diceDurationMillis=120;
+  static const int diceDurationMillis=30;
 
   List<String> diceImages = [
     "assets/images/dice_0.png",
@@ -166,7 +167,7 @@ class _LudoScreenState extends State<LudoScreen> {
   // May do additional things depending on the reqType.
   void sendRequest({required String reqType, required String request}) async {
     try{
-      Socket sock=await Socket.connect("127.0.0.1", 8080); //  10.42.0.1
+      Socket sock=await Socket.connect(piIP, 8080); //  10.42.0.1
       sock.write(request);
 
       sock.listen(
@@ -304,9 +305,17 @@ class _LudoScreenState extends State<LudoScreen> {
           targetIndex = moveList[1][0] * 15 + moveList[1][1];
           targetClr = moveList[1][2];
 
-          if (checkCollision(targetIndex) && checkRestriction(targetClr)) {
-            return targetIndex;
+
+          if (checkRestriction(targetClr)) {
+            if(checkCollision(targetIndex)){
+              return targetIndex;
+            }
+            else{
+              return -1;
+            }
           }
+
+
         }
 
         // Check the first move.
@@ -414,7 +423,7 @@ class _LudoScreenState extends State<LudoScreen> {
         }
       }
       else { // touched pawnIndex!=-1
-        if (highlightedTilePositions.contains(touchedPawnIndex)) {
+        if (highlightedTilePositions.contains(index)) {
           if (touchedPawnIndex == index) {
             setState(() {
               touchedPawnIndex = -1;

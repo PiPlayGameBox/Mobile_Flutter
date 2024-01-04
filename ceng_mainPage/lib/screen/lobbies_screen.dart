@@ -13,7 +13,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 String respToken = '0';
-String userName = '';
+String usernameToken = 'huseyin';
+String printResponseLogin = '';
 
 class LobbiesScreen extends StatefulWidget {
   static String routeName = '/lobbies';
@@ -44,10 +45,10 @@ class _LobbiesScreenState extends State<LobbiesScreen> {
   void _sendTCPRequest() async {
     try {
       // Create a new socket for each request
-      Socket _socket = await Socket.connect('127.0.0.1', 8080);
+      Socket _socket = await Socket.connect('10.42.0.1', 8080); // 127.0.0.1 ...... 10.42.0.1
 
       // Send a simple message to the server
-      _socket.write('LOGIN|huseyin|123456');
+      _socket.write('LOGIN|$usernameToken|123456');
 
       // Listen for responses from the server
       _socket.listen(
@@ -57,6 +58,8 @@ class _LobbiesScreenState extends State<LobbiesScreen> {
 
           // Update the UI with the received response
           print('Received from server: $response');
+
+          printResponseLogin = response;
 
           List<String> parts = response.split('|');
 
@@ -116,6 +119,10 @@ class _LobbiesScreenState extends State<LobbiesScreen> {
                   text: 'Lobbies',
                   fontSize: 50,
                 ),
+                CustomText(
+                  text: printResponseLogin,
+                  fontSize: 50, shadows: [],
+                ),
                 Column(
                   children: [
                     const SizedBox(
@@ -125,7 +132,7 @@ class _LobbiesScreenState extends State<LobbiesScreen> {
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => LudoScreen(token: respToken,playerInfo: {'R':'huseyin', 'g':'veli', 'y':'ayşe', 'b':'fatma'},)),
+                            builder: (context) => LudoScreen(token: respToken,playerInfo: {'r':'huseyin', 'g':'doruk', 'y':'abdullah', 'B':'samet'},)),
                       ),
                       roomData: RoomData(
                         'Lobby1','LUDO','pass123',['p1','p2','Cool player B)']
@@ -136,7 +143,7 @@ class _LobbiesScreenState extends State<LobbiesScreen> {
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => RummikubScreen(token: respToken,userName: 'huseyin'), /*{
+                            builder: (context) => RummikubScreen(token: respToken,userName: usernameToken), /*{
                               return FutureBuilder(
                                 future: Provider.of<RummikubDataProvider>(context).fetchData(),
                                 builder: (context, snapshot) {

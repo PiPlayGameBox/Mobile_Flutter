@@ -28,6 +28,7 @@ String exampleResponse = 'OK/E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E
 bool isTurn = false; // Checks if its user's turn. When user gets a tile, this becomes false and makes the isGet true and waits for the user to throw tile.
 bool isGet = false; // Becomes true when tile get from board, becomes false when tile thrown.
 int numberOfTiles = 0;
+String piIP = '10.42.0.1';
 /*'OK/B4_1|Y10_2|B13_1|E|R4_1|R10_1|K11_2|B6_2|E|K9_2|K6_2|E|B12_1|B1_2|E|E|E|E|K5_2|E|E|E|E|E|E|Y5_2|E|E|E|Y13_1|/E|B9_2|Y9_2|Y10_1|/Y4_2|B7_2|47';*/
 /*
   OK, tiles, floor (floor[3]=next tile to get), (spoiler tile to get middle, okey, tiles left.)
@@ -711,7 +712,7 @@ class _RummikubScreenState extends State<RummikubScreen> {
   void _sendBoardRequest() async {
     try {
       // Create a new socket for each request
-      Socket _socket = await Socket.connect('127.0.0.1', 8080);
+      Socket _socket = await Socket.connect(piIP, 8080);
       //print('Token::::');
       //print(respToken);
       // Send a simple message to the server
@@ -751,7 +752,7 @@ class _RummikubScreenState extends State<RummikubScreen> {
     try {
       // Create a new socket for each request
       // 10.42.0.1 IP of rasp
-      Socket _socket = await Socket.connect('127.0.0.1', 8080);
+      Socket _socket = await Socket.connect(piIP, 8080);
 
       // Send a simple message to the server
       _socket.write(moveReq);
@@ -789,7 +790,7 @@ class _RummikubScreenState extends State<RummikubScreen> {
     try {
       // Create a new socket for each request
       // 10.42.0.1 IP of rasp
-      Socket _socket = await Socket.connect('127.0.0.1', 8080);
+      Socket _socket = await Socket.connect(piIP, 8080);
 
       // Send a simple message to the server
       _socket.write(throwReq);
@@ -828,7 +829,7 @@ class _RummikubScreenState extends State<RummikubScreen> {
     try {
       // Create a new socket for each request
       // 10.42.0.1 IP of rasp
-      Socket _socket = await Socket.connect('127.0.0.1', 8080);
+      Socket _socket = await Socket.connect(piIP, 8080);
 
       // Send a simple message to the server
       _socket.write(getReq);
@@ -1042,7 +1043,7 @@ class _RummikubScreenState extends State<RummikubScreen> {
 
             if(toTile != -1){// When toTile is selected too.
               String toTileStr = toTile.toString();
-              print('GET TILE MIDDLE: $toTileStr');
+              print('GET TILE LEFT: $toTileStr');
               String getReq = createGetRequestMessage('Y', toTileStr);
 
               _sendGetTileRequest(getReq);
