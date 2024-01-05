@@ -616,7 +616,7 @@ class _LudoScreenState extends State<LudoScreen> {
                             width: size.width * 0.04,
                           ),
                           Text(
-                            "Previous Dice: ",
+                            "Dice: ",
                             style: TextStyle(fontSize: turnInfoHeight * 0.3),
                           ),
                           SizedBox(
@@ -630,6 +630,22 @@ class _LudoScreenState extends State<LudoScreen> {
                       ),
                     ),
                     const Spacer(),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                      ),
+                      onPressed: () { /* TODO */ },
+                      child: const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: FittedBox(
+                          fit: BoxFit.fitHeight,
+                          child: Text(
+                            "Quit",
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ),
                     SizedBox(
                       width: size.width * 0.05,
                     ),
