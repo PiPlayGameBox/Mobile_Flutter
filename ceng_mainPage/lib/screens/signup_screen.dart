@@ -33,7 +33,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
     created += '|';
 
-    created += 'dorime.com';
+    created += 'dorime@hotmail.com';
 
     created += '|';
 
@@ -98,8 +98,10 @@ class _SignupScreenState extends State<SignupScreen> {
       return false;
     }
     //setver
-
-    _sendRegisterRequest(createRegisterRequestMessage(userNameController.text, passwordController.text));
+    if(userNameController.text != null && passwordController.text != null){
+      _sendRegisterRequest(createRegisterRequestMessage(userNameController.text, passwordController.text));
+      await Future.delayed(const Duration(seconds: 1));
+    }
     await Future.delayed(const Duration(seconds: 1));
     if (registerSuccess == "OK") {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -114,7 +116,7 @@ class _SignupScreenState extends State<SignupScreen> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("The username is already taken."),
+          content: Text("Invalid signing up. Username taken or bad input."),
           behavior: SnackBarBehavior.floating,
           duration: Duration(seconds: 2),
         ),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class PlayerFrame extends StatelessWidget {
   final String playerName;
-  final Icon playerIcon;
+  final Image playerIcon;
   final double frameHeight;
   final double frameWidth;
 

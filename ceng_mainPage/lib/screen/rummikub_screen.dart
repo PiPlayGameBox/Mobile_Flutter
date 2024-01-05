@@ -17,6 +17,7 @@ import 'package:ceng_mainpage/widget/turnpassed_left_tile.dart';
 import 'package:ceng_mainpage/widget/turnpassed_middle_tile.dart';
 import 'package:ceng_mainpage/widget/turnpassed_right_tile.dart';
 import 'package:ceng_mainpage/screens/login_screen.dart';
+import 'package:ceng_mainpage/screen/main_menu_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:dotted_border/dotted_border.dart';
@@ -78,10 +79,12 @@ class RummikubScreen extends StatefulWidget {
     Key? key,
     required this.token,
     required this.userName,
+    required this.infoLUR,
   }) : super(key: key);
 
   final String token;
   final String userName;
+  final List<String> infoLUR;
 
   @override
   State<RummikubScreen> createState() => _RummikubScreenState();
@@ -431,12 +434,10 @@ class _RummikubScreenState extends State<RummikubScreen> {
 
     // Middle tile
     if(middle0 == 'E'){
-      midRummyTile = EmptyRummyTile(
+      midRummyTile = NonclickableEmptyTile(
         rummyTileHeight: rummyTileHeight,
         rummyTileWidth: rummyTileWidth,
-        anyRummyClicked: anyRummyClicked,
         takozIndex: '34',
-/*        isMoved: isMoved,*/
       );
     }
     else{
@@ -1188,8 +1189,9 @@ class _RummikubScreenState extends State<RummikubScreen> {
             child: PlayerFrame(
               frameHeight: rummyTileHeight * 1.5,
               frameWidth: rummyTileWidth * 1.75,
-              playerIcon: const Icon(Icons.person),
-              playerName: "Mehmet",
+              playerIcon: Image.asset(mainMenuGlobals.picList[
+              widget.infoLUR[0].hashCode % mainMenuGlobals.ICON_NUMBER]),
+              playerName: widget.infoLUR[0],
             ),
           ),
           Positioned(
@@ -1198,8 +1200,9 @@ class _RummikubScreenState extends State<RummikubScreen> {
             child: PlayerFrame(
               frameHeight: rummyTileHeight * 1.5,
               frameWidth: rummyTileWidth * 1.75,
-              playerIcon: const Icon(Icons.person),
-              playerName: "Selin",
+              playerIcon: Image.asset(mainMenuGlobals.picList[
+              widget.infoLUR[2].hashCode % mainMenuGlobals.ICON_NUMBER]),
+              playerName: widget.infoLUR[2],
             ),
           ),
           Positioned(
@@ -1208,8 +1211,9 @@ class _RummikubScreenState extends State<RummikubScreen> {
             child: PlayerFrame(
               frameHeight: rummyTileHeight * 1.5,
               frameWidth: rummyTileWidth * 1.75,
-              playerIcon: const Icon(Icons.person),
-              playerName: "Emre",
+              playerIcon: Image.asset(mainMenuGlobals.picList[
+              widget.infoLUR[1].hashCode % mainMenuGlobals.ICON_NUMBER]),
+              playerName: widget.infoLUR[1],
             ),
           ),
           // players -end

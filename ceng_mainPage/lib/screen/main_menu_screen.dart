@@ -2,7 +2,9 @@ import 'package:ceng_mainpage/screen/leaderboard_screen.dart';
 import 'package:ceng_mainpage/screen/lobbies_screen.dart';
 import 'package:ceng_mainpage/screen/lobby_screen.dart';
 import 'package:ceng_mainpage/screen/profile_screen.dart';
+import 'package:ceng_mainpage/screens/login_screen.dart';
 import 'package:ceng_mainpage/widget/custom_imagebanner.dart';
+import 'package:ceng_mainpage/widget/custom_text.dart';
 import 'package:flutter/material.dart';
 
 import '../responsive/responsive.dart';
@@ -10,14 +12,12 @@ import '../widget/custom_button.dart';
 
 class mainMenuGlobals{
   static List<String> picList = [
-    /*"assets/images/dice_0.png",
-    "assets/images/dice_1.png",
-    "assets/images/dice_2.png",
-    "assets/images/dice_3.png",
-    "assets/images/dice_4.png",
-    "assets/images/dice_5.png",
-    "assets/images/dice_6.png"*/
+    "assets/images/fox.png",
+    "assets/images/frog.png",
+    "assets/images/monkey.png",
+    "assets/images/owl.png",
   ];
+  static int ICON_NUMBER = picList.length;
 }
 
 
@@ -51,14 +51,27 @@ class MainMenuScreen extends StatelessWidget {
           children: [
             SizedBox(
               height: 150,
-              child: Image.asset('assets/images/bg_200_icon_ceng.png'),
+              child: Image.asset(mainMenuGlobals.picList[
+              loginGlobals.username.hashCode % mainMenuGlobals.ICON_NUMBER]),
             ),
-            const SizedBox(height: 40,), // To separate buttons.
-            CustomButton(
-              onTap: () => profile(context),
-              text: 'Profile',
+            const SizedBox(height: 20,), // To separate buttons.
+            Text(
+              loginGlobals.username.toUpperCase(),
+              style: TextStyle(
+                color: Colors.grey[750],
+                fontSize: 30,
+                fontWeight: FontWeight.bold, // Add fontWeight if desired
+                letterSpacing: 1.5, // Adjust the letter spacing
+                shadows: const [
+                  Shadow(
+                    color: Colors.black,
+                    offset: Offset(2, 2), // Adjust the shadow offset
+                    blurRadius: 1, // Adjust the blur radius
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 10,), // To separate buttons.
+            const SizedBox(height: 20,), // To separate buttons.
             CustomButton(
               onTap: () => lobby(context),
               text: 'Show All Lobbies',

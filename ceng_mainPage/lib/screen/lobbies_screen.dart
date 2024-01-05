@@ -98,7 +98,7 @@ class _LobbiesScreenState extends State<LobbiesScreen> {
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => RummikubScreen(token: loginGlobals.token,userName: loginGlobals.username),
+                            builder: (context) => RummikubScreen(token: loginGlobals.token,userName: loginGlobals.username, infoLUR: ['doruk','abdullah','samet'],),
                         ),
                       ),
                       roomData: RoomData(
