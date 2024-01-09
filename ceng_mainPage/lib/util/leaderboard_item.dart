@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:ceng_mainpage/screen/main_menu_screen.dart';
 
 class LeaderboardItem extends StatelessWidget {
   int placeInBoard;
-  String avatar;
   String userName;
   int ludoPoints;
   int okeyPoints;
@@ -12,7 +12,6 @@ class LeaderboardItem extends StatelessWidget {
   LeaderboardItem({
     super.key,
     required this.placeInBoard,
-    required this.avatar,
     required this.userName,
     required this.ludoPoints,
     required this.okeyPoints,
@@ -93,9 +92,10 @@ class LeaderboardItem extends StatelessWidget {
             decoration: BoxDecoration(
               border: Border.all(color: const Color(0xffe1ac3e), width: 2.0),
               borderRadius:
-                  BorderRadius.all(Radius.circular(height * 0.6 * 0.5)),
+              BorderRadius.all(Radius.circular(height * 0.6 * 0.5)),
             ),
-            child: Image.asset("assets/images/fox.png"),
+            child: Image.asset(mainMenuGlobals.picList[
+            userName.hashCode % mainMenuGlobals.ICON_NUMBER]),
           ),
           SizedBox(
             width: width * 0.03,
@@ -148,7 +148,7 @@ class LeaderboardItem extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Image.asset(
-                          "assets/images/red_pawn.png",
+                          "assets/images/ludo.png",
                           height: height * 0.4,
                           width: width * 0.1,
                         ),
@@ -172,7 +172,7 @@ class LeaderboardItem extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Image.asset(
-                          "assets/images/dice_0.png",
+                          "assets/images/okey.png",
                           height: height * 0.4,
                           width: width * 0.1,
                         ),

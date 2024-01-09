@@ -97,6 +97,7 @@ class _RummikubScreenState extends State<RummikubScreen> {
   // So use the provider's current data, we need to use like: "dataProvider.rumiData[dataProvider.index].middleTiles" in example.
   late RummikubDataProvider dataProvider;
   late Timer timer;
+  String playersTurnInfo = "";
 
   // Flags for if any rummy or empty tile is clicked.
   bool anyRummyClicked = false;
@@ -1067,9 +1068,9 @@ class _RummikubScreenState extends State<RummikubScreen> {
             isTurn = false;
             isGet = false;
 
-            setState(() {
+            /*setState(() {
               won = didIWonOkey(tilesTakoz.sublist(0,15),tilesTakoz.sublist(15), middleTiles[1]);
-            });
+            });*/
 
 
 
@@ -1199,6 +1200,7 @@ class _RummikubScreenState extends State<RummikubScreen> {
               playerIcon: Image.asset(mainMenuGlobals.picList[
               widget.infoLUR[0].hashCode % mainMenuGlobals.ICON_NUMBER]),
               playerName: widget.infoLUR[0],
+              turnInfo: playersTurnInfo,
             ),
           ),
           Positioned(
@@ -1210,6 +1212,7 @@ class _RummikubScreenState extends State<RummikubScreen> {
               playerIcon: Image.asset(mainMenuGlobals.picList[
               widget.infoLUR[2].hashCode % mainMenuGlobals.ICON_NUMBER]),
               playerName: widget.infoLUR[2],
+              turnInfo: playersTurnInfo,
             ),
           ),
           Positioned(
@@ -1221,6 +1224,7 @@ class _RummikubScreenState extends State<RummikubScreen> {
               playerIcon: Image.asset(mainMenuGlobals.picList[
               widget.infoLUR[1].hashCode % mainMenuGlobals.ICON_NUMBER]),
               playerName: widget.infoLUR[1],
+              turnInfo: playersTurnInfo,
             ),
           ),
           // players -end
@@ -1276,8 +1280,24 @@ class _RummikubScreenState extends State<RummikubScreen> {
                 bottom: 0,
                 width: holderWidth,
                 height: holderHeight,
-                child: const Image(
-                  image: AssetImage('assets/images/takoz.png'),
+
+                child: Container(
+                  width: holderWidth,
+                  height: holderHeight,
+                  decoration: isTurn ? BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.yellowAccent.withOpacity(1.0),
+                        spreadRadius: 6,
+                        blurRadius: 5,
+                        offset: Offset(0, 3),
+                      ),
+                    ],
+                  ) : BoxDecoration(),
+                  child: const Image(
+                    image: AssetImage('assets/images/takoz.png'),
+                  ),
                 ),
               ),
               // first floor

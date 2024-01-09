@@ -1,24 +1,35 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
-class PlayerFrame extends StatelessWidget {
+class PlayerFrame extends StatefulWidget {
   final String playerName;
   final Image playerIcon;
   final double frameHeight;
   final double frameWidth;
+  final String turnInfo;
 
   const PlayerFrame(
       {super.key,
-        required this.playerName,
-        required this.playerIcon,
-        required this.frameWidth,
-        required this.frameHeight});
+      required this.playerName,
+      required this.playerIcon,
+      required this.frameWidth,
+      required this.frameHeight,
+      required this.turnInfo});
+
+  @override
+  State<PlayerFrame> createState() => _PlayerFrameState();
+}
+
+class _PlayerFrameState extends State<PlayerFrame> {
+
 
   @override
   Widget build(BuildContext context) {
-    double nameWidth = frameWidth;
-    double nameHeight = frameHeight * 0.25;
-    double avatarHeight = frameHeight * 0.75;
-    double avatarWidth = frameHeight * 0.75;
+    double nameWidth = widget.frameWidth;
+    double nameHeight = widget.frameHeight * 0.3;
+    double avatarHeight = widget.frameHeight * 0.7;
+    double avatarWidth = widget.frameHeight * 0.7;
 
     return SizedBox(
       //width: frameWidth,
@@ -28,31 +39,57 @@ class PlayerFrame extends StatelessWidget {
           Container(
             width: avatarWidth,
             height: avatarHeight,
-            decoration: BoxDecoration(
+            decoration:
+            (widget.turnInfo == widget.playerName)
+                ? BoxDecoration(
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.yellowAccent.withOpacity(1),
+                  spreadRadius: 2,
+                  blurRadius: 5,
+                  offset: Offset(0, 3),
+                ),
+              ],
+            ) :
+            BoxDecoration(
               //color: Colors.red,
-              /*border: Border.all(color: Colors.brown, width: 2),*/
+              //border: Border.all(color: Colors.brown, width: 2),
               borderRadius: BorderRadius.circular(5),
             ),
             child: Center(
-              child: playerIcon,
+              child: widget.playerIcon,
             ),
           ),
           Container(
             width: nameWidth,
             height: nameHeight,
-            decoration: BoxDecoration(
-              color: Colors.blue[800],
-              border: Border.all(color: Colors.brown, width: 2),
-              borderRadius: BorderRadius.circular(5),
-
-            ),
+            decoration: (widget.turnInfo == widget.playerName)
+                ? BoxDecoration(
+                    color: Colors.blue[800],
+                    border: Border.all(color: Colors.brown, width: 2),
+                    borderRadius: BorderRadius.circular(5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.yellowAccent.withOpacity(1.0),
+                        spreadRadius: 2,
+                        blurRadius: 5,
+                        offset: Offset(0, 3),
+                      ),
+                    ],
+                  )
+                : BoxDecoration(
+                    color: Colors.blue[800],
+                    border: Border.all(color: Colors.brown, width: 2),
+                    borderRadius: BorderRadius.circular(5),
+                  ),
             child: Center(
               child: FittedBox(
                 fit: BoxFit.fill,
                 child: Text(
-                  playerName,
-                  style: const TextStyle(
-                      color: Colors.white,
+                  widget.playerName,
+                  style: TextStyle(
+                      color: true ? Colors.white : Colors.transparent,
                       fontWeight: FontWeight.bold,
                       fontFamily: "Lato"),
                 ),
