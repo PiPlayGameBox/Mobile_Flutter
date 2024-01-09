@@ -630,22 +630,6 @@ class _LudoScreenState extends State<LudoScreen> {
                       ),
                     ),
                     const Spacer(),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                      ),
-                      onPressed: () { /* TODO */ },
-                      child: const Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: FittedBox(
-                          fit: BoxFit.fitHeight,
-                          child: Text(
-                            "Quit",
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ),
-                      ),
-                    ),
                     SizedBox(
                       width: size.width * 0.05,
                     ),

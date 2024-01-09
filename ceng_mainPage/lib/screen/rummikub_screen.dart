@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:ceng_mainpage/provider/rummikub_data_provider.dart';
+import 'package:ceng_mainpage/util/endGameOkey.dart';
 import 'package:ceng_mainpage/widget/clickable_rummy_tile.dart';
 import 'package:ceng_mainpage/widget/empty_rummy_tile.dart';
 import 'package:ceng_mainpage/widget/mid_rummy_tile.dart';
@@ -1065,6 +1066,12 @@ class _RummikubScreenState extends State<RummikubScreen> {
             // Its thrown. All turns passed
             isTurn = false;
             isGet = false;
+
+            setState(() {
+              won = didIWonOkey(tilesTakoz.sublist(0,15),tilesTakoz.sublist(15), middleTiles[1]);
+            });
+
+
 
           }
 

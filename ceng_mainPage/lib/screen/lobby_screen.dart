@@ -16,6 +16,8 @@ class lobbyScreenGlobals{
 
 class LobbyItemGlobals {
   static int joinedLobby = -1;
+  static bool ludoStart = false;
+  static bool okeyStart = false;
 }
 
 class LobbyInfo{
@@ -265,6 +267,9 @@ class _LobbyScreenState extends State<LobbyScreen> {
 
   void ludoStartCheck(){
     if(lobbyScreenGlobals.globPlayersLudo[3] != 'empty'){
+      setState(){
+        LobbyItemGlobals.ludoStart = true;
+      }
 
       Navigator.push(
         context,
@@ -272,6 +277,13 @@ class _LobbyScreenState extends State<LobbyScreen> {
             builder: (context) => LudoScreen(players:  lobbyScreenGlobals.globPlayersLudo ,)),
       );
 
+/*      lobbyScreenGlobals.globPlayersLudo[3] = 'empty';*/
+
+    }
+    else{
+      setState(){
+        LobbyItemGlobals.ludoStart = false;
+      }
     }
   }
 
@@ -281,25 +293,31 @@ class _LobbyScreenState extends State<LobbyScreen> {
   void okeyStartCheck(){
     if(lobbyScreenGlobals.globPlayersOkey[3] != 'empty'){ // doruk samet hus ahm
 
+      setState(){
+        LobbyItemGlobals.okeyStart = true;
+      }
+
       List<String> LUR = ['','',''];// Left up right.
+      print("oky strt");
+      // AAA BBB CCC DDD
+      //  0   1   2   3
+      if(loginGlobals.username == lobbyScreenGlobals.globPlayersOkey[0]){ // AAA
+        LUR[0] = lobbyScreenGlobals.globPlayersOkey[3]; // Left
+        LUR[1] = lobbyScreenGlobals.globPlayersOkey[2]; // Middle
+        LUR[2] = lobbyScreenGlobals.globPlayersOkey[1]; // Right
 
-      if(loginGlobals.username == lobbyScreenGlobals.globPlayersOkey[0]){
-        LUR[0] = lobbyScreenGlobals.globPlayersOkey[3];
-        LUR[1] = lobbyScreenGlobals.globPlayersOkey[2];
-        LUR[2] = lobbyScreenGlobals.globPlayersOkey[1];
-
-      }else if(loginGlobals.username == lobbyScreenGlobals.globPlayersOkey[1]){
-        LUR[0] = lobbyScreenGlobals.globPlayersOkey[0];
-        LUR[1] = lobbyScreenGlobals.globPlayersOkey[3];
-        LUR[2] = lobbyScreenGlobals.globPlayersOkey[2];
-      }else if(loginGlobals.username == lobbyScreenGlobals.globPlayersOkey[2]){
-        LUR[0] = lobbyScreenGlobals.globPlayersOkey[1];
-        LUR[1] = lobbyScreenGlobals.globPlayersOkey[0];
-        LUR[2] = lobbyScreenGlobals.globPlayersOkey[2];
-      }else if(loginGlobals.username == lobbyScreenGlobals.globPlayersOkey[3]){
-        LUR[0] = lobbyScreenGlobals.globPlayersOkey[2];
-        LUR[1] = lobbyScreenGlobals.globPlayersOkey[1];
-        LUR[2] = lobbyScreenGlobals.globPlayersOkey[0];
+      }else if(loginGlobals.username == lobbyScreenGlobals.globPlayersOkey[1]){ // BBB
+        LUR[0] = lobbyScreenGlobals.globPlayersOkey[0]; // Left
+        LUR[1] = lobbyScreenGlobals.globPlayersOkey[3]; // Middle
+        LUR[2] = lobbyScreenGlobals.globPlayersOkey[2]; // Right
+      }else if(loginGlobals.username == lobbyScreenGlobals.globPlayersOkey[2]){ // CCC
+        LUR[0] = lobbyScreenGlobals.globPlayersOkey[1]; // Left
+        LUR[1] = lobbyScreenGlobals.globPlayersOkey[0]; // Middle
+        LUR[2] = lobbyScreenGlobals.globPlayersOkey[3]; // Right
+      }else if(loginGlobals.username == lobbyScreenGlobals.globPlayersOkey[3]){ // DDD
+        LUR[0] = lobbyScreenGlobals.globPlayersOkey[2]; // Left
+        LUR[1] = lobbyScreenGlobals.globPlayersOkey[1]; // Middle
+        LUR[2] = lobbyScreenGlobals.globPlayersOkey[0]; // Right
       }else{ // If none,
 
       }
@@ -310,6 +328,10 @@ class _LobbyScreenState extends State<LobbyScreen> {
             builder: (context) => RummikubScreen(token: loginGlobals.token,userName: loginGlobals.username, infoLUR: LUR)),
       );
 
+    }else{
+      setState(){
+        LobbyItemGlobals.okeyStart = false;
+      }
     }
   }
 
@@ -323,9 +345,14 @@ class _LobbyScreenState extends State<LobbyScreen> {
 
     timer = Timer.periodic(const Duration(seconds: 1), (Timer timer){
 
-      _sendGetLobbiesRequest(createGetLobbiesMessage());
+      setState(() {
+
+        _sendGetLobbiesRequest(createGetLobbiesMessage());
+
+      });
 
     });
+
   }
 
   @override
@@ -454,6 +481,10 @@ class _LobbyScreenState extends State<LobbyScreen> {
                             ),
                           ),
                         ),
+                        Positioned(
+                            top: size.width * 0.7 * 0.33,
+                            left: size.width * 0.7 * 0.35,
+                            child: IconButton(iconSize: size.width * 0.18,icon: Icon(Icons.refresh), onPressed: (){ludoStartCheck();},)),
 
                         // top player
                         Positioned(
@@ -762,6 +793,13 @@ class _LobbyScreenState extends State<LobbyScreen> {
                           ),
                         ),
                       ),
+
+                      Positioned(
+                          top: size.width * 0.7 * 0.33,
+                          left: size.width * 0.7 * 0.35,
+                          child: IconButton(iconSize: size.width * 0.18,icon: Icon(Icons.refresh), onPressed: (){
+                            okeyStartCheck();
+                          },)),
 
                       // right player
                       Positioned(

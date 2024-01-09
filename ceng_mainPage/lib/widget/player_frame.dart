@@ -30,7 +30,7 @@ class PlayerFrame extends StatelessWidget {
             height: avatarHeight,
             decoration: BoxDecoration(
               //color: Colors.red,
-              border: Border.all(color: Colors.brown, width: 2),
+              /*border: Border.all(color: Colors.brown, width: 2),*/
               borderRadius: BorderRadius.circular(5),
             ),
             child: Center(
