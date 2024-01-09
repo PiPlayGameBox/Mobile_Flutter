@@ -175,10 +175,12 @@ class _RummikubScreenState extends State<RummikubScreen> {
       print('widget usr: ${loginGlobals.username}');
       if(loginGlobals.username == userTurn){
         setState(() {
+          playersTurnInfo = userTurn;
           isTurn = true;
         });
       }else{
         setState(() {
+          playersTurnInfo = userTurn;
           isTurn = false;
         });
 
@@ -1284,7 +1286,7 @@ class _RummikubScreenState extends State<RummikubScreen> {
                 child: Container(
                   width: holderWidth,
                   height: holderHeight,
-                  decoration: isTurn ? BoxDecoration(
+                  decoration: playersTurnInfo == loginGlobals.username ? BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
                     boxShadow: [
                       BoxShadow(

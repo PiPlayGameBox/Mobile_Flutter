@@ -13,7 +13,7 @@ class loginGlobals{
   static String username = '';
   static String password = '';
   static String token = 'empty';
-  static const String piIP = '10.42.0.1';
+  static const String piIP = '127.0.0.1'; // TODO: Raspberry: 10.42.0.1    me 192.168.1.47 local: 127.0.0.1
 
 }
 

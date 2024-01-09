@@ -102,23 +102,26 @@ class LeaderboardItem extends StatelessWidget {
           ),
           SizedBox(
             width: width * 0.2,
-            child: Text(
-              userName,
-              //overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                  color: () {
-                    if (placeInBoard == 1) {
-                      return const Color(0xffbf8700);
-                    } else if (placeInBoard == 2) {
-                      return const Color(0xff38a4d1);
-                    } else if (placeInBoard == 3) {
-                      return const Color(0xffd83a38);
-                    } else {
-                      return const Color(0xffdf653d);
-                    }
-                  }(),
-                  fontSize: height * 0.25,
-                  fontWeight: FontWeight.w700),
+            child: FittedBox(
+              fit: BoxFit.fill,
+              child: Text(
+                userName,
+                //overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                    color: () {
+                      if (placeInBoard == 1) {
+                        return const Color(0xffbf8700);
+                      } else if (placeInBoard == 2) {
+                        return const Color(0xff38a4d1);
+                      } else if (placeInBoard == 3) {
+                        return const Color(0xffd83a38);
+                      } else {
+                        return const Color(0xffdf653d);
+                      }
+                    }(),
+                    fontSize: height * 0.25,
+                    fontWeight: FontWeight.w700),
+              ),
             ),
           ),
           const Spacer(),
