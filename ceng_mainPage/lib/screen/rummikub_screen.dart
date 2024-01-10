@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:ceng_mainpage/provider/rummikub_data_provider.dart';
+import 'package:ceng_mainpage/screen/lobby_screen.dart';
 import 'package:ceng_mainpage/util/endGameOkey.dart';
 import 'package:ceng_mainpage/widget/clickable_rummy_tile.dart';
 import 'package:ceng_mainpage/widget/empty_rummy_tile.dart';
@@ -31,6 +32,7 @@ String exampleResponse = 'OK/E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E
 bool isTurn = false; // Checks if its user's turn. When user gets a tile, this becomes false and makes the isGet true and waits for the user to throw tile.
 bool isGet = false; // Becomes true when tile get from board, becomes false when tile thrown.
 int numberOfTiles = 0;
+int won = 0;
 /*'OK/B4_1|Y10_2|B13_1|E|R4_1|R10_1|K11_2|B6_2|E|K9_2|K6_2|E|B12_1|B1_2|E|E|E|E|K5_2|E|E|E|E|E|E|Y5_2|E|E|E|Y13_1|/E|B9_2|Y9_2|Y10_1|/Y4_2|B7_2|47';*/
 /*
   OK, tiles, floor (floor[3]=next tile to get), (spoiler tile to get middle, okey, tiles left.)
@@ -545,6 +547,14 @@ class _RummikubScreenState extends State<RummikubScreen> {
 
   }
 
+
+  Widget winRummyTile = Container();
+
+  void constructWinRummyTile(double rummyTileHeight, double rummyTileWidth, bool isMyTurn){
+
+
+  }
+
   void constructFirstFloorWidgets(
       double rummyTileHeight, double rummyTileWidth) {
 
@@ -668,7 +678,7 @@ class _RummikubScreenState extends State<RummikubScreen> {
   }
 
   // Implement with server.
-  String createMoveRequestMessage(List<String> newTakoz){
+  String createMoveRequestMessage(List<String> newTakoz, String initPoint){
 
     String created = '';
 
@@ -683,10 +693,14 @@ class _RummikubScreenState extends State<RummikubScreen> {
       created += newTakoz[i];
     }
 
+    created += '|';
+
+    created += initPoint;
+
     return created;
   }
 
-  String createThrowRequestMessage(String thrownTile){
+  String createThrowRequestMessage(String thrownTile, String initPoint){
 
     String created = '';
 
@@ -699,6 +713,11 @@ class _RummikubScreenState extends State<RummikubScreen> {
     created += '|';
 
     created += thrownTile;
+
+    created += '|';
+
+    created += initPoint;
+
 
     return created;
   }
@@ -720,6 +739,23 @@ class _RummikubScreenState extends State<RummikubScreen> {
     created += '|';
 
     created += placeIndex;
+
+    return created;
+  }
+
+  String createQuitRequestMessage(){
+
+    String created = '';
+
+    const String iQuit = 'QUIT|';
+
+    created += iQuit;
+
+    created += loginGlobals.token;
+
+    created += '|';
+
+    created += '2'; // Lobby id of the okey
 
     return created;
   }
@@ -876,6 +912,50 @@ class _RummikubScreenState extends State<RummikubScreen> {
 
   }
 
+  void _sendQuitRequest(String quitReq) async {
+
+    try {
+      // Create a new socket for each request
+      // 10.42.0.1 IP of rasp
+      Socket _socket = await Socket.connect(loginGlobals.piIP, 8080);
+
+      print('SERVER PATLIYO QUITTE');
+      // Send a simple message to the server
+      _socket.write(quitReq);
+
+      // Listen for responses from the server
+      _socket.listen(
+            (List<int> data) {
+          // Convert the received data to a String
+          String response = utf8.decode(data);
+
+          print('EZPEZLEMONSQZ: $response');
+
+          // Update the UI with the received response
+          // print('Received from server MOVE: $response');
+
+          // Close the socket after receiving a response
+          _socket.close();
+        },
+        onDone: () {
+          // Handle when the server closes the connection
+          print('Server closed the connection');
+        },
+        onError: (error) {
+          // Handle any errors that occur during communication
+          print('Error receiving response: $error');
+          // Close the socket in case of an error
+          _socket.close();
+        },
+      );
+    } catch (e) {
+      print('Error sending request: $e');
+    }
+
+  }
+
+
+
   // Our initial state is here.
   @override
   void initState(){
@@ -888,7 +968,6 @@ class _RummikubScreenState extends State<RummikubScreen> {
     String strTilesThrown = '';
     String strMiddleTiles = '';
     String strUserTurn = '';
-
 
     timer = Timer.periodic(const Duration(milliseconds: 100), (Timer timer) {
 
@@ -937,6 +1016,9 @@ class _RummikubScreenState extends State<RummikubScreen> {
         /*print("First Floor Length: ${firstFloor.length}");
         print("Second Floor Length: ${secondFloor.length}");*/
 
+        /*won = numTilesInAllPers(tilesTakoz.sublist(0,15),tilesTakoz.sublist(15), middleTiles[1]);
+        print('WON NUMBERRRRRRR :::::  $won');*/
+
 
         numberOfTiles = getNumberOfTiles(tilesTakoz); // Updates the number of tiles
         print('IMDATT :::: $numberOfTiles');
@@ -957,7 +1039,6 @@ class _RummikubScreenState extends State<RummikubScreen> {
         constructMiddle(rmtH, rmtW, isTurn);
 
 
-
         print('ISTURN: $isTurn');
         checkAnyRummyClicked();
 
@@ -966,6 +1047,7 @@ class _RummikubScreenState extends State<RummikubScreen> {
         updateFromTile();
 
         updateToTile();
+
 
         // Checks if user get tile from middle.
         if(TurnbasedMiddleRummyTileGlobals.isAnyClicked){
@@ -1046,6 +1128,8 @@ class _RummikubScreenState extends State<RummikubScreen> {
         constructMiddle(rmtH, rmtW, isTurn);
 
 
+
+
         // This function checks if user thrown any tile to board.
         if(ClickableRummyTileGlobals.isAnyClicked){
 
@@ -1055,7 +1139,7 @@ class _RummikubScreenState extends State<RummikubScreen> {
 
 
             print('THROWN:$thrownTileStr');
-            String throwReq = createThrowRequestMessage(thrownTileStr);
+            String throwReq = createThrowRequestMessage(thrownTileStr, won.toString());
 
             _sendThrowTileRequest(throwReq);
 
@@ -1069,12 +1153,6 @@ class _RummikubScreenState extends State<RummikubScreen> {
             // Its thrown. All turns passed
             isTurn = false;
             isGet = false;
-
-            /*setState(() {
-              won = didIWonOkey(tilesTakoz.sublist(0,15),tilesTakoz.sublist(15), middleTiles[1]);
-            });*/
-
-
 
           }
 
@@ -1092,6 +1170,10 @@ class _RummikubScreenState extends State<RummikubScreen> {
         if(anyEmptyClicked){ // If user can and click any empty tile, it means user moved that tile.
           List<String> newTakoz = [];
           print("From: $fromTile To: $toTile");
+// TODO: held tile is not counted.
+          won = numTilesInAllPers(tilesTakoz.sublist(0,15),tilesTakoz.sublist(15), middleTiles[1]);
+          print('WON NUMBERRRRRRR :::::  $won');
+
           if(fromTile != -1  && toTile != -1){
             newTakoz = moveTile(tilesTakoz, fromTile, toTile);
 
@@ -1118,7 +1200,7 @@ class _RummikubScreenState extends State<RummikubScreen> {
             //print("Fromtileflag: $fromTileFlag ToTileFlag: $toTileFlag");
             if(fromTileFlag && toTileFlag){
               //print("New Takoz: $newTakoz");
-              String tempReq = createMoveRequestMessage(newTakoz);
+              String tempReq = createMoveRequestMessage(newTakoz,won.toString());
               //print("Request: $tempReq");
               _sendMoveRequest(tempReq);
             }
@@ -1190,139 +1272,209 @@ class _RummikubScreenState extends State<RummikubScreen> {
     return Scaffold(
       backgroundColor: const Color(0xff297446),
       //resizeToAvoidBottomInset: false,
-      body: SafeArea(
-        child: Stack(children: [
-          // players -start
-          Positioned(
-            top: size.height * 0.275,
-            left: size.width * 0.02,
-            child: PlayerFrame(
-              frameHeight: rummyTileHeight * 1.5,
-              frameWidth: rummyTileWidth * 1.75,
-              playerIcon: Image.asset(mainMenuGlobals.picList[
-              widget.infoLUR[0].hashCode % mainMenuGlobals.ICON_NUMBER]),
-              playerName: widget.infoLUR[0],
-              turnInfo: playersTurnInfo,
+      body: PopScope(
+        canPop: true,
+        onPopInvoked: (bool didPop) {
+          _showExitDialog(context);
+          return;
+        },
+        child: SafeArea(
+          child: Stack(children: [
+            Positioned(
+              top: 16.0,
+              left: 16.0,
+              child: FloatingActionButton(
+                onPressed: () {
+                  _showExitDialog(context);
+                },
+                tooltip: 'Leave',
+                child: const Icon(Icons.exit_to_app),
+              ),
             ),
-          ),
-          Positioned(
-            top: size.height * 0.275,
-            right: size.width * 0.02,
-            child: PlayerFrame(
-              frameHeight: rummyTileHeight * 1.5,
-              frameWidth: rummyTileWidth * 1.75,
-              playerIcon: Image.asset(mainMenuGlobals.picList[
-              widget.infoLUR[2].hashCode % mainMenuGlobals.ICON_NUMBER]),
-              playerName: widget.infoLUR[2],
-              turnInfo: playersTurnInfo,
+            // players -start
+            Positioned(
+              top: size.height * 0.275,
+              left: size.width * 0.02,
+              child: PlayerFrame(
+                frameHeight: rummyTileHeight * 1.5,
+                frameWidth: rummyTileWidth * 1.75,
+                playerIcon: Image.asset(mainMenuGlobals.picList[
+                widget.infoLUR[0].hashCode % mainMenuGlobals.ICON_NUMBER]),
+                playerName: widget.infoLUR[0],
+                turnInfo: playersTurnInfo,
+              ),
             ),
-          ),
-          Positioned(
-            top: size.height * 0.02,
-            left: size.width * 0.5 - (rummyTileWidth * 1.75) * 0.5,
-            child: PlayerFrame(
-              frameHeight: rummyTileHeight * 1.5,
-              frameWidth: rummyTileWidth * 1.75,
-              playerIcon: Image.asset(mainMenuGlobals.picList[
-              widget.infoLUR[1].hashCode % mainMenuGlobals.ICON_NUMBER]),
-              playerName: widget.infoLUR[1],
-              turnInfo: playersTurnInfo,
+            Positioned(
+              top: size.height * 0.275,
+              right: size.width * 0.02,
+              child: PlayerFrame(
+                frameHeight: rummyTileHeight * 1.5,
+                frameWidth: rummyTileWidth * 1.75,
+                playerIcon: Image.asset(mainMenuGlobals.picList[
+                widget.infoLUR[2].hashCode % mainMenuGlobals.ICON_NUMBER]),
+                playerName: widget.infoLUR[2],
+                turnInfo: playersTurnInfo,
+              ),
             ),
-          ),
-          // players -end
-          //okey tile
-          Positioned(
+            Positioned(
+              top: size.height * 0.02,
+              left: size.width * 0.5 - (rummyTileWidth * 1.75) * 0.5,
+              child: PlayerFrame(
+                frameHeight: rummyTileHeight * 1.5,
+                frameWidth: rummyTileWidth * 1.75,
+                playerIcon: Image.asset(mainMenuGlobals.picList[
+                widget.infoLUR[1].hashCode % mainMenuGlobals.ICON_NUMBER]),
+                playerName: widget.infoLUR[1],
+                turnInfo: playersTurnInfo,
+              ),
+            ),
+            // players -end
+            //okey tile
+            Positioned(
+                top: size.height * 0.3,
+                right: size.width * 0.5 + 2,
+                height: rummyTileHeight,
+                width: rummyTileWidth,
+                child: okeyRummyTile),
+            // mid rummy tiles
+            Positioned(
               top: size.height * 0.3,
-              right: size.width * 0.5 + 2,
+              left: size.width * 0.5 + 2,
               height: rummyTileHeight,
               width: rummyTileWidth,
-              child: okeyRummyTile),
-          // mid rummy tiles
-          Positioned(
-            top: size.height * 0.3,
-            left: size.width * 0.5 + 2,
-            height: rummyTileHeight,
-            width: rummyTileWidth,
-            child: midRummyTile,
-          ),
-
-          Positioned(
-            top: size.height * 0.1,
-            left: size.width * 0.15,
-            height: rummyTileHeight,
-            width: rummyTileWidth,
-            child: rummyTilesOnTheFloorLeftTop,
-          ),
-          Positioned(
-            top: size.height * 0.1,
-            right: size.width * 0.15,
-            height: rummyTileHeight,
-            width: rummyTileWidth,
-            child: rummyTilesOnTheFloorRightTop,
-          ),
-          Positioned(
-            bottom: holderHeight + holderHeight * 0.08,
-            right: size.width * 0.15,
-            height: rummyTileHeight,
-            width: rummyTileWidth,
-            child: rummyTilesOnTheFloorRightBot,
-          ),
-          Positioned(
-            bottom: holderHeight + holderHeight * 0.08,
-            left: size.width * 0.15,
-            height: rummyTileHeight,
-            width: rummyTileWidth,
-            child: rummyTilesOnTheFloorLeftBot,
-          ),
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              // board
-              Positioned(
-                bottom: 0,
-                width: holderWidth,
-                height: holderHeight,
-
-                child: Container(
+              child: midRummyTile,
+            ),
+            Positioned(
+              top: size.height * 0.3,
+              left: size.width * 0.548,
+              height: rummyTileHeight,
+              width: rummyTileWidth,
+              child: winRummyTile,
+            ),
+        
+            Positioned(
+              top: size.height * 0.1,
+              left: size.width * 0.15,
+              height: rummyTileHeight,
+              width: rummyTileWidth,
+              child: rummyTilesOnTheFloorLeftTop,
+            ),
+            Positioned(
+              top: size.height * 0.1,
+              right: size.width * 0.15,
+              height: rummyTileHeight,
+              width: rummyTileWidth,
+              child: rummyTilesOnTheFloorRightTop,
+            ),
+            Positioned(
+              bottom: holderHeight + holderHeight * 0.08,
+              right: size.width * 0.15,
+              height: rummyTileHeight,
+              width: rummyTileWidth,
+              child: rummyTilesOnTheFloorRightBot,
+            ),
+            Positioned(
+              bottom: holderHeight + holderHeight * 0.08,
+              left: size.width * 0.15,
+              height: rummyTileHeight,
+              width: rummyTileWidth,
+              child: rummyTilesOnTheFloorLeftBot,
+            ),
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                // board
+                Positioned(
+                  bottom: 0,
                   width: holderWidth,
                   height: holderHeight,
-                  decoration: playersTurnInfo == loginGlobals.username ? BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.yellowAccent.withOpacity(1.0),
-                        spreadRadius: 6,
-                        blurRadius: 5,
-                        offset: Offset(0, 3),
-                      ),
-                    ],
-                  ) : BoxDecoration(),
-                  child: const Image(
-                    image: AssetImage('assets/images/takoz.png'),
+        
+                  child: Container(
+                    width: holderWidth,
+                    height: holderHeight,
+                    decoration: (playersTurnInfo == loginGlobals.username) || numberOfTiles == 15 ? BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.yellowAccent.withOpacity(1.0),
+                          spreadRadius: 6,
+                          blurRadius: 5,
+                          offset: Offset(0, 3),
+                        ),
+                      ],
+                    ) : BoxDecoration(),
+                    child: const Image(
+                      image: AssetImage('assets/images/takoz.png'),
+                    ),
                   ),
                 ),
-              ),
-              // first floor
-              Positioned(
-                bottom: holderHeight * 0.56,
-                height: rummyTileHeight + 3,
-                child: Row(
-                    //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: firstFloor),
-              ),
-              //second floor
-              Positioned(
-                bottom: holderHeight * 0.05,
-                //width: holderWidth * 0.92,
-                height: rummyTileHeight + 3,
-                child: Row(
-                    //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: secondFloor),
-              ),
-            ],
-          ),
-        ]),
+                // first floor
+                Positioned(
+                  bottom: holderHeight * 0.56,
+                  height: rummyTileHeight + 3,
+                  child: Row(
+                      //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: firstFloor),
+                ),
+                //second floor
+                Positioned(
+                  bottom: holderHeight * 0.05,
+                  //width: holderWidth * 0.92,
+                  height: rummyTileHeight + 3,
+                  child: Row(
+                      //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: secondFloor),
+                ),
+              ],
+            ),
+          ]),
+        ),
       ),
     );
   }
+
+  Future<bool> _showExitDialog(BuildContext context) async {
+    bool exit = false;
+
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Are you sure?'),
+          content: Text('Leaving the game will destroy the okey board and result in -1 point penalty!'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                exit = false;
+                Navigator.of(context).pop();
+              },
+              child: Text('No, I will stay.'),
+            ),
+            TextButton(
+              onPressed: () {
+                exit = true;
+                Navigator.of(context).pop();
+              },
+              child: Text('Yes, leave anyway.'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (exit) {
+      _sendQuitRequest(createQuitRequestMessage());
+      _navigateToLobby();
+    }
+
+    return Future.value(!exit); // Return whether to allow or block the exit
+  }
+
+  void _navigateToLobby() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => LobbyScreen()),
+    );
+  }
+
 }
