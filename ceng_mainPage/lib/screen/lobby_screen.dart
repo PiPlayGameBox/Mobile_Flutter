@@ -8,7 +8,7 @@ import 'package:ceng_mainpage/screens/login_screen.dart';
 import 'package:ceng_mainpage/screen/main_menu_screen.dart';
 import 'package:flutter/material.dart';
 
-class lobbyScreenGlobals {
+class lobbyScreenGlobals{
   static List<LobbyInfo> lobbyInformations = [];
   static List<String> globPlayersLudo = [];
   static List<String> globPlayersOkey = [];
@@ -20,27 +20,31 @@ class LobbyItemGlobals {
   static bool okeyStart = false;
 }
 
-class LobbyInfo {
+class LobbyInfo{
+
   String lobbyID = '';
   String lobbyType = '';
-  List<String> lobbyPlayers = ["empty", "empty", "empty"];
+  List<String> lobbyPlayers = ["empty","empty","empty"];
 
   LobbyInfo(this.lobbyID, this.lobbyType, this.lobbyPlayers);
 }
 
 class LobbyScreen extends StatefulWidget {
   static String routeName = '/lobby';
-
   const LobbyScreen({super.key});
 
   @override
   State<LobbyScreen> createState() => _LobbyScreenState();
 }
 
+
+
 class _LobbyScreenState extends State<LobbyScreen> {
+
   late Timer timer;
 
-  String createGetLobbiesMessage() {
+  String createGetLobbiesMessage(){
+
     String created = '';
 
     const String getLobbies = 'GETLOBBIES|';
@@ -54,21 +58,22 @@ class _LobbyScreenState extends State<LobbyScreen> {
 
   void _sendGetLobbiesRequest(String getReq) async {
     try {
+
       clearLobbyInformation();
       // Create a new socket for each request
-      Socket _socket = await Socket.connect(
-          loginGlobals.piIP, 8080); // 127.0.0.1 ...... 10.42.0.1
+      Socket _socket = await Socket.connect(loginGlobals.piIP, 8080); // 127.0.0.1 ...... 10.42.0.1
 
       // Send a simple message to the server
       _socket.write(getReq);
 
       // Listen for responses from the server
       _socket.listen(
-        (List<int> data) {
+            (List<int> data) {
           // Convert the received data to a String
           String response = utf8.decode(data);
 
           setState(() {
+
             // Update the UI with the received response
             print('Received from server: $response');
 
@@ -78,10 +83,11 @@ class _LobbyScreenState extends State<LobbyScreen> {
 
             String lobbySuccess = parts[0];
 
-            for (int i = 1; i < parts.length; ++i) {
+            for(int i=1; i<parts.length; ++i){
+
               List<String> tempInfo = parts[i].split('|');
 
-              List<String> tempPlayers = ['empty', 'empty', 'empty', 'empty'];
+              List<String> tempPlayers = ['empty','empty','empty','empty'];
 
               tempPlayers[0] = tempInfo[2];
 
@@ -91,17 +97,19 @@ class _LobbyScreenState extends State<LobbyScreen> {
 
               tempPlayers[3] = tempInfo[5];
 
-              if (tempInfo[1] == 'LUDO') {
+              if(tempInfo[1] == 'LUDO'){
                 lobbyScreenGlobals.globPlayersLudo = tempPlayers;
-              } else if (tempInfo[1] == 'OKEY') {
+              }else if(tempInfo[1] == 'OKEY'){
                 lobbyScreenGlobals.globPlayersOkey = tempPlayers;
               }
 
-              lobbyScreenGlobals.lobbyInformations
-                  .add(LobbyInfo(tempInfo[0], tempInfo[1], tempPlayers));
+              lobbyScreenGlobals.lobbyInformations.add(LobbyInfo(tempInfo[0],tempInfo[1],tempPlayers));
 
               print('IMDAT: ${tempInfo[0]},${tempInfo[1]},${tempPlayers}');
+
             }
+
+
           });
 
           // Close the socket after receiving a response
@@ -150,7 +158,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
 
       // Listen for responses from the server
       _socket.listen(
-        (List<int> data) {
+            (List<int> data) {
           // Convert the received data to a String
           String response = utf8.decode(data);
 
@@ -214,7 +222,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
 
       // Listen for responses from the server
       _socket.listen(
-        (List<int> data) {
+            (List<int> data) {
           // Convert the received data to a String
           String response = utf8.decode(data);
 
@@ -257,75 +265,76 @@ class _LobbyScreenState extends State<LobbyScreen> {
     });
   }
 
-  void ludoStartCheck() {
-    if (lobbyScreenGlobals.globPlayersLudo[3] != 'empty') {
-      setState() {
+  void ludoStartCheck(){
+    if(lobbyScreenGlobals.globPlayersLudo[3] != 'empty'){
+      setState(){
         LobbyItemGlobals.ludoStart = true;
       }
 
-      Future.delayed(const Duration(seconds: 1), () {
-        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => LudoScreen(players: lobbyScreenGlobals.globPlayersLudo)));
-      });
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => LudoScreen(players:  lobbyScreenGlobals.globPlayersLudo ,)),
+      );
 
-    } else {
-      setState() {
+/*      lobbyScreenGlobals.globPlayersLudo[3] = 'empty';*/
+
+    }
+    else{
+      setState(){
         LobbyItemGlobals.ludoStart = false;
       }
     }
   }
 
-  void okeyStartCheck() {
-    if (lobbyScreenGlobals.globPlayersOkey[3] != 'empty') {
-      // doruk samet hus ahm
 
-      setState() {
+
+
+  void okeyStartCheck(){
+    if(lobbyScreenGlobals.globPlayersOkey[3] != 'empty'){ // doruk samet hus ahm
+
+      setState(){
         LobbyItemGlobals.okeyStart = true;
       }
 
-      List<String> LUR = ['', '', '']; // Left up right.
+      List<String> LUR = ['','',''];// Left up right.
       print("oky strt");
       // AAA BBB CCC DDD
       //  0   1   2   3
-      if (loginGlobals.username == lobbyScreenGlobals.globPlayersOkey[0]) {
-        // AAA
+      if(loginGlobals.username == lobbyScreenGlobals.globPlayersOkey[0]){ // AAA
         LUR[0] = lobbyScreenGlobals.globPlayersOkey[3]; // Left
         LUR[1] = lobbyScreenGlobals.globPlayersOkey[2]; // Middle
         LUR[2] = lobbyScreenGlobals.globPlayersOkey[1]; // Right
-      } else if (loginGlobals.username ==
-          lobbyScreenGlobals.globPlayersOkey[1]) {
-        // BBB
+
+      }else if(loginGlobals.username == lobbyScreenGlobals.globPlayersOkey[1]){ // BBB
         LUR[0] = lobbyScreenGlobals.globPlayersOkey[0]; // Left
         LUR[1] = lobbyScreenGlobals.globPlayersOkey[3]; // Middle
         LUR[2] = lobbyScreenGlobals.globPlayersOkey[2]; // Right
-      } else if (loginGlobals.username ==
-          lobbyScreenGlobals.globPlayersOkey[2]) {
-        // CCC
+      }else if(loginGlobals.username == lobbyScreenGlobals.globPlayersOkey[2]){ // CCC
         LUR[0] = lobbyScreenGlobals.globPlayersOkey[1]; // Left
         LUR[1] = lobbyScreenGlobals.globPlayersOkey[0]; // Middle
         LUR[2] = lobbyScreenGlobals.globPlayersOkey[3]; // Right
-      } else if (loginGlobals.username ==
-          lobbyScreenGlobals.globPlayersOkey[3]) {
-        // DDD
+      }else if(loginGlobals.username == lobbyScreenGlobals.globPlayersOkey[3]){ // DDD
         LUR[0] = lobbyScreenGlobals.globPlayersOkey[2]; // Left
         LUR[1] = lobbyScreenGlobals.globPlayersOkey[1]; // Middle
         LUR[2] = lobbyScreenGlobals.globPlayersOkey[0]; // Right
-      } else {
-        // If none,
+      }else{ // If none,
+
       }
 
-      Future.delayed(const Duration(seconds: 1), () {
-        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => RummikubScreen(
-            token: loginGlobals.token,
-            userName: loginGlobals.username,
-            infoLUR: LUR)));
-      });
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => RummikubScreen(token: loginGlobals.token,userName: loginGlobals.username, infoLUR: LUR)),
+      );
 
-    } else {
-      setState() {
+    }else{
+      setState(){
         LobbyItemGlobals.okeyStart = false;
       }
     }
   }
+
 
   @override
   void initState() {
@@ -333,17 +342,22 @@ class _LobbyScreenState extends State<LobbyScreen> {
 
     super.initState();
 
-    timer = Timer.periodic(const Duration(seconds: 1), (Timer timer) {
+
+    timer = Timer.periodic(const Duration(seconds: 1), (Timer timer){
+
       setState(() {
+
         _sendGetLobbiesRequest(createGetLobbiesMessage());
-        ludoStartCheck();
-        okeyStartCheck();
+
       });
+
     });
+
   }
 
   @override
   void dispose() {
+
     // We are stopping the timer when widget disposed.
     timer.cancel();
 
@@ -381,604 +395,501 @@ class _LobbyScreenState extends State<LobbyScreen> {
                   height: safeAreaHeight * 0.04,
                 ),
                 //// LUDO LOBBY
-                SizedBox(
-                  width: size.width * 0.7,
-                  height: size.width * 0.85,
-                  child: Column(
-                    children: [
-                      Container(
-                        width: size.width * 0.7,
-                        height: (size.width * 0.85 - size.width * 0.7) * 0.9,
-                        decoration: const BoxDecoration(
-                          // border: Border.all(color: Colors.black, width: 3),
-                          borderRadius: BorderRadius.all(Radius.circular(10)),
-                          color: Color(0xff004c5f),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Container(
+            SizedBox(
+              width: size.width * 0.7,
+              height: size.width * 0.85,
+              child: Column(
+                children: [
+                  Container(
+                    width: size.width * 0.7,
+                    height: (size.width * 0.85 - size.width * 0.7) * 0.9,
+                    decoration: const BoxDecoration(
+                      // border: Border.all(color: Colors.black, width: 3),
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
+                      color: Color(0xff004c5f),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: size.width * 0.85 * 0.15,
+                          decoration: const BoxDecoration(
+                            borderRadius: BorderRadius.all(Radius.circular(8)),
+                            color: Colors.red,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Container(
                               width: size.width * 0.85 * 0.15,
-                              decoration: const BoxDecoration(
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(8)),
-                                color: Colors.red,
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(8),
-                                child: Container(
-                                  width: size.width * 0.85 * 0.15,
-                                  height: size.width * 0.85 * 0.15,
-                                  decoration: BoxDecoration(
-                                    color: Colors.redAccent,
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(
-                                          size.width * 0.85 * 0.15 * 0.5),
-                                    ),
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      1.toString(),
-                                      style: TextStyle(
-                                        fontSize:
-                                            size.width * 0.85 * 0.10 * 0.8,
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            SizedBox(
-                              width: size.width * 0.7 * 0.08,
-                            ),
-                            Text(
-                              "LUDO",
-                              style: TextStyle(
-                                  fontSize:
-                                      (size.width * 0.85 - size.width * 0.7) *
-                                          0.9 *
-                                          0.4,
-                                  color: Colors.white),
-                            ),
-                            const Spacer(),
-                            Image.asset(
-                              "assets/images/ludo.png",
                               height: size.width * 0.85 * 0.15,
-                              width: size.width * 0.85 * 0.15,
-                            ),
-                            SizedBox(
-                              width: size.width * 0.7 * 0.06,
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(
-                          height:
-                              (size.width * 0.85 - size.width * 0.7) * 0.06),
-                      Container(
-                        width: size.width * 0.7,
-                        height: size.width * 0.7,
-                        child: Stack(
-                          children: [
-                            Positioned(
-                              top: size.width * 0.7 * 0.1,
-                              left: size.width * 0.7 * 0.1,
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Image.asset(
-                                  "assets/images/wooden_board.png",
-                                  height: size.width * 0.7 * 0.8,
-                                  width: size.width * 0.7 * 0.8,
+                              decoration: BoxDecoration(
+                                color: Colors.redAccent,
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(size.width * 0.85 * 0.15 * 0.5),
                                 ),
                               ),
-                            ),
-
-                            // join-leave
-                            Positioned(
-                              top: size.width * 0.7 * 0.33,
-                              left: size.width * 0.7 * 0.35,
-                              child: GestureDetector(
-                                onTap: (LobbyItemGlobals.joinedLobby == -1)
-                                    ? () {
-                                        setState(() {
-                                          LobbyItemGlobals.joinedLobby = 1;
-
-                                          _sendConnectRequest(
-                                              createConnectMessage(
-                                                  1.toString()));
-                                        });
-                                      }
-                                    : () {
-                                        setState(() {
-                                          if (LobbyItemGlobals.joinedLobby ==
-                                              1) {
-                                            _sendDisconnectRequest(
-                                                createDisconnectMessage(
-                                                    1.toString()));
-
-                                            LobbyItemGlobals.joinedLobby = -1;
-                                          }
-                                        });
-                                      },
-                                child: Container(
-                                  width: size.width * 0.7 * 0.3,
-                                  height: size.width * 0.7 * 0.3,
-                                  decoration: BoxDecoration(
-                                      border: Border.all(
-                                          color: Colors.orange, width: 5.0),
-                                      borderRadius: BorderRadius.all(
-                                          Radius.circular(
-                                              size.width * 0.7 * 0.3 * 0.5)),
-                                      color: Colors.black87),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(5),
-                                    child: (LobbyItemGlobals.joinedLobby != 1)
-                                        ? const FittedBox(
-                                            fit: BoxFit.contain,
-                                            child: Text(
-                                              "PLAY",
-                                              style: TextStyle(
-                                                color: Colors.green,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          )
-                                        : const FittedBox(
-                                            fit: BoxFit.contain,
-                                            child: Text(
-                                              "LEAVE",
-                                              style: TextStyle(
-                                                color: Colors.red,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ),
+                              child: Center(
+                                child: Text(
+                                  1.toString(),
+                                  style: TextStyle(
+                                    fontSize: size.width * 0.85 * 0.10 * 0.8,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ),
                             ),
-
-                            // top player
-                            Positioned(
-                              top: 0.0,
-                              left: size.width * 0.7 * 0.35,
-                              child: Container(
-                                width: size.width * 0.7 * 0.3,
-                                height: size.width * 0.7 * 0.3,
-                                decoration: BoxDecoration(
-                                    border: Border.all(
-                                        color: const Color(0xff0E77F2), width: 5.0),
-                                    borderRadius: BorderRadius.all(
-                                        Radius.circular(
-                                            size.width * 0.7 * 0.3 * 0.5)),
-                                    color: const Color(0xff04203f)),
-                                child: () {
-                                  if (lobbyScreenGlobals
-                                      .lobbyInformations.isNotEmpty) {
-                                    if (lobbyScreenGlobals.lobbyInformations[0]
-                                            .lobbyPlayers[0] ==
-                                        'empty') {
-                                      return const Icon(Icons.person_off);
-                                    }
-                                    return Image.asset(mainMenuGlobals.picList[
-                                        lobbyScreenGlobals.lobbyInformations[0]
-                                                .lobbyPlayers[0].hashCode %
-                                            mainMenuGlobals.ICON_NUMBER]);
-                                  } else {
-                                    return const Icon(Icons.person_off);
-                                  }
-                                }(),
-                              ),
-                            ),
-
-                            // right player
-                            Positioned(
-                              top: size.width * 0.85 * 0.27,
-                              right: 0.0,
-                              child: Container(
-                                width: size.width * 0.7 * 0.3,
-                                height: size.width * 0.7 * 0.3,
-                                decoration: BoxDecoration(
-                                    border: Border.all(
-                                        color: const Color(0xff0E77F2), width: 5.0),
-                                    borderRadius: BorderRadius.all(
-                                        Radius.circular(
-                                            size.width * 0.7 * 0.3 * 0.5)),
-                                    color: const Color(0xff04203f)),
-                                child: () {
-                                  if (lobbyScreenGlobals
-                                      .lobbyInformations.isNotEmpty) {
-                                    if (lobbyScreenGlobals.lobbyInformations[0]
-                                            .lobbyPlayers[1] ==
-                                        'empty') {
-                                      return const Icon(Icons.person_off);
-                                    }
-                                    return Image.asset(mainMenuGlobals.picList[
-                                        lobbyScreenGlobals.lobbyInformations[0]
-                                                .lobbyPlayers[1].hashCode %
-                                            mainMenuGlobals.ICON_NUMBER]);
-                                  } else {
-                                    return const Icon(Icons.person_off);
-                                  }
-                                }(),
-                              ),
-                            ),
-
-                            // bottom player
-                            Positioned(
-                              bottom: 0.0,
-                              left: size.width * 0.7 * 0.35,
-                              child: Container(
-                                width: size.width * 0.7 * 0.3,
-                                height: size.width * 0.7 * 0.3,
-                                decoration: BoxDecoration(
-                                    border: Border.all(
-                                        color: const Color(0xff0E77F2), width: 5.0),
-                                    borderRadius: BorderRadius.all(
-                                        Radius.circular(
-                                            size.width * 0.7 * 0.3 * 0.5)),
-                                    color: const Color(0xff04203f)),
-                                child: () {
-                                  if (lobbyScreenGlobals
-                                      .lobbyInformations.isNotEmpty) {
-                                    if (lobbyScreenGlobals.lobbyInformations[0]
-                                            .lobbyPlayers[2] ==
-                                        'empty') {
-                                      return const Icon(Icons.person_off);
-                                    }
-                                    return Image.asset(mainMenuGlobals.picList[
-                                        lobbyScreenGlobals.lobbyInformations[0]
-                                                .lobbyPlayers[2].hashCode %
-                                            mainMenuGlobals.ICON_NUMBER]);
-                                  } else {
-                                    return const Icon(Icons.person_off);
-                                  }
-                                }(),
-                              ),
-                            ),
-
-                            // left player
-                            Positioned(
-                              top: size.width * 0.85 * 0.27,
-                              left: 0.0,
-                              child: Container(
-                                width: size.width * 0.7 * 0.3,
-                                height: size.width * 0.7 * 0.3,
-                                decoration: BoxDecoration(
-                                    border: Border.all(
-                                        color: const Color(0xff0E77F2), width: 5.0),
-                                    borderRadius: BorderRadius.all(
-                                        Radius.circular(
-                                            size.width * 0.7 * 0.3 * 0.5)),
-                                    color: const Color(0xff04203f)),
-                                child: () {
-                                  if (lobbyScreenGlobals
-                                      .lobbyInformations.isNotEmpty) {
-                                    if (lobbyScreenGlobals.lobbyInformations[0]
-                                            .lobbyPlayers[3] ==
-                                        'empty') {
-                                      return const Icon(Icons.person_off);
-                                    }
-                                    return Image.asset(mainMenuGlobals.picList[
-                                        lobbyScreenGlobals.lobbyInformations[0]
-                                                .lobbyPlayers[3].hashCode %
-                                            mainMenuGlobals.ICON_NUMBER]);
-                                  } else {
-                                    return const Icon(Icons.person_off);
-                                  }
-                                }(),
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ],
+                        SizedBox(
+                          width: size.width * 0.7 * 0.08,
+                        ),
+                        Text(
+                          "LUDO",
+                          style: TextStyle(
+                              fontSize:
+                              (size.width * 0.85 - size.width * 0.7) * 0.9 * 0.4,
+                              color: Colors.white),
+                        ),
+                        Spacer(),
+                        Icon(
+                          Icons.password,
+                          color: Colors.white,
+                          size: size.width * 0.85 * 0.10,
+                        ),
+                        SizedBox(
+                          width: size.width * 0.7 * 0.06,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                  SizedBox(height: (size.width * 0.85 - size.width * 0.7) * 0.06),
+                  Container(
+                    width: size.width * 0.7,
+                    height: size.width * 0.7,
+                    child: Stack(
+                      children: [
+                        Positioned(
+                          top: size.width * 0.7 * 0.1,
+                          left: size.width * 0.7 * 0.1,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.asset(
+                              "assets/images/wooden_board.png",
+                              height: size.width * 0.7 * 0.8,
+                              width: size.width * 0.7 * 0.8,
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                            top: size.width * 0.7 * 0.33,
+                            left: size.width * 0.7 * 0.35,
+                            child: IconButton(iconSize: size.width * 0.18,icon: Icon(Icons.refresh), onPressed: (){ludoStartCheck();},)),
+
+                        // top player
+                        Positioned(
+                          top: 0.0,
+                          left: size.width * 0.7 * 0.35,
+                          child: GestureDetector(
+                            onTap: (LobbyItemGlobals.joinedLobby == -1)
+                                ? () {
+                              setState(() {
+
+                                LobbyItemGlobals.joinedLobby = 1;
+
+                                _sendConnectRequest(createConnectMessage(
+                                    1.toString()));
+                              });
+                            }
+                                : () {
+                              setState(() {
+                                if (LobbyItemGlobals.joinedLobby ==
+                                    1) {
+                                  _sendDisconnectRequest(createDisconnectMessage(
+                                      1.toString()));
+
+                                  LobbyItemGlobals.joinedLobby = -1;
+                                }
+                              });
+                            },
+                            child: Container(
+                              width: size.width * 0.7 * 0.3,
+                              height: size.width * 0.7 * 0.3,
+                              decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.orange, width: 5.0),
+                                  borderRadius: BorderRadius.all(
+                                      Radius.circular(size.width * 0.7 * 0.3 * 0.5)),
+                                  color: Colors.black87),
+                              child: Padding(
+                                padding: const EdgeInsets.all(5),
+                                child:
+                                (LobbyItemGlobals.joinedLobby != 1)
+                                    ? const FittedBox(
+                                  fit: BoxFit.contain,
+                                  child: Text(
+                                    "PLAY",
+                                    style: TextStyle(
+                                      color: Colors.green,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                )
+                                    : const FittedBox(
+                                  fit: BoxFit.contain,
+                                  child: Text(
+                                    "LEAVE",
+                                    style: TextStyle(
+                                      color: Colors.red,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        // right player
+                        Positioned(
+                          top: size.width * 0.85 * 0.27,
+                          right: 0.0,
+                          child: Container(
+                            width: size.width * 0.7 * 0.3,
+                            height: size.width * 0.7 * 0.3,
+                            decoration: BoxDecoration(
+                                border:
+                                Border.all(color: Color(0xff0E77F2), width: 5.0),
+                                borderRadius: BorderRadius.all(
+                                    Radius.circular(size.width * 0.7 * 0.3 * 0.5)),
+                                color: const Color(0xff04203f)),
+                            child: (){
+                              if(lobbyScreenGlobals.lobbyInformations.isNotEmpty){
+                                if(lobbyScreenGlobals.lobbyInformations[0].lobbyPlayers[0] == 'empty'){
+                                  return Icon(Icons.person_off);
+                                }
+                                return Image.asset(mainMenuGlobals.picList[
+                                lobbyScreenGlobals.lobbyInformations[0].lobbyPlayers[0].hashCode % mainMenuGlobals.ICON_NUMBER]);
+                              }else{
+                                return Icon(Icons.person_off);
+                              }
+
+                            }(),
+                          ),
+                        ),
+
+                        // bottom player
+                        Positioned(
+                          bottom: 0.0,
+                          left: size.width * 0.7 * 0.35,
+                          child: Container(
+                            width: size.width * 0.7 * 0.3,
+                            height: size.width * 0.7 * 0.3,
+                            decoration: BoxDecoration(
+                                border:
+                                Border.all(color: Color(0xff0E77F2), width: 5.0),
+                                borderRadius: BorderRadius.all(
+                                    Radius.circular(size.width * 0.7 * 0.3 * 0.5)),
+                                color: const Color(0xff04203f)),
+                            child: (){
+                              if(lobbyScreenGlobals.lobbyInformations.isNotEmpty){
+                                if(lobbyScreenGlobals.lobbyInformations[0].lobbyPlayers[1] == 'empty'){
+                                  return Icon(Icons.person_off);
+                                }
+                                return Image.asset(mainMenuGlobals.picList[
+                                lobbyScreenGlobals.lobbyInformations[0].lobbyPlayers[1].hashCode % mainMenuGlobals.ICON_NUMBER]);
+                              }else{
+                                return Icon(Icons.person_off);
+                              }
+
+                                }(),
+                          ),
+                        ),
+
+                        // left player
+                        Positioned(
+                          top: size.width * 0.85 * 0.27,
+                          left: 0.0,
+                          child: Container(
+                            width: size.width * 0.7 * 0.3,
+                            height: size.width * 0.7 * 0.3,
+                            decoration: BoxDecoration(
+                                border:
+                                Border.all(color: Color(0xff0E77F2), width: 5.0),
+                                borderRadius: BorderRadius.all(
+                                    Radius.circular(size.width * 0.7 * 0.3 * 0.5)),
+                                color: const Color(0xff04203f)),
+                            child: (){
+                              if(lobbyScreenGlobals.lobbyInformations.isNotEmpty){
+                                if(lobbyScreenGlobals.lobbyInformations[0].lobbyPlayers[2] == 'empty'){
+                                  return Icon(Icons.person_off);
+                                }
+                                return Image.asset(mainMenuGlobals.picList[
+                                lobbyScreenGlobals.lobbyInformations[0].lobbyPlayers[2].hashCode % mainMenuGlobals.ICON_NUMBER]);
+                              }else{
+                                return Icon(Icons.person_off);
+                              }
+
+                                }(),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
                 ////
 
                 SizedBox(
                   height: safeAreaHeight * 0.02,
                 ),
                 //// OKEY LOBBY
-                SizedBox(
-                  width: size.width * 0.85,
-                  height: size.width * 0.7,
-                  child: Column(
+          SizedBox(
+            width: size.width * 0.85,
+            height: size.width * 0.7,
+            child: Column(
+              children: [
+                Container(
+                  width: size.width * 0.7,
+                  height: (size.width * 0.85 - size.width * 0.7) * 0.9,
+                  decoration: const BoxDecoration(
+                    // border: Border.all(color: Colors.black, width: 3),
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                    color: Color(0xff004c5f),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Container(
-                        width: size.width * 0.7,
-                        height: (size.width * 0.85 - size.width * 0.7) * 0.9,
+                        width: size.width * 0.85 * 0.15,
                         decoration: const BoxDecoration(
-                          // border: Border.all(color: Colors.black, width: 3),
-                          borderRadius: BorderRadius.all(Radius.circular(10)),
-                          color: Color(0xff004c5f),
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                          color: Colors.red,
                         ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Container(
-                              width: size.width * 0.85 * 0.15,
-                              decoration: const BoxDecoration(
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(8)),
-                                color: Colors.red,
+                        child: Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Container(
+                            width: size.width * 0.85 * 0.15,
+                            height: size.width * 0.85 * 0.15,
+                            decoration: BoxDecoration(
+                              color: Colors.redAccent,
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(size.width * 0.85 * 0.15 * 0.5),
                               ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(8),
-                                child: Container(
-                                  width: size.width * 0.85 * 0.15,
-                                  height: size.width * 0.85 * 0.15,
-                                  decoration: BoxDecoration(
-                                    color: Colors.redAccent,
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(
-                                          size.width * 0.85 * 0.15 * 0.5),
-                                    ),
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      2.toString(),
-                                      style: TextStyle(
-                                        fontSize:
-                                            size.width * 0.85 * 0.10 * 0.8,
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                2.toString(),
+                                style: TextStyle(
+                                  fontSize: size.width * 0.85 * 0.10 * 0.8,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
-                            SizedBox(
-                              width: size.width * 0.7 * 0.08,
-                            ),
-                            Text(
-                              "OKEY",
-                              style: TextStyle(
-                                  fontSize:
-                                      (size.width * 0.85 - size.width * 0.7) *
-                                          0.9 *
-                                          0.4,
-                                  color: Colors.white),
-                            ),
-                            const Spacer(),
-                            Image.asset(
-                              "assets/images/okey.png",
-                              height: size.width * 0.85 * 0.15,
-                              width: size.width * 0.85 * 0.15,
-                            ),
-                            SizedBox(
-                              width: size.width * 0.7 * 0.06,
-                            ),
-                          ],
+                          ),
                         ),
                       ),
                       SizedBox(
-                          height:
-                              (size.width * 0.85 - size.width * 0.7) * 0.06),
-                      Container(
-                        width: size.width * 0.7,
-                        height: size.width * 0.7,
-                        child: Stack(
-                          children: [
-                            Positioned(
-                              top: size.width * 0.7 * 0.1,
-                              left: size.width * 0.7 * 0.1,
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Image.asset(
-                                  "assets/images/wooden_board.png",
-                                  height: size.width * 0.7 * 0.8,
-                                  width: size.width * 0.7 * 0.8,
+                        width: size.width * 0.7 * 0.08,
+                      ),
+                      Text(
+                        "OKEY",
+                        style: TextStyle(
+                            fontSize:
+                            (size.width * 0.85 - size.width * 0.7) * 0.9 * 0.4,
+                            color: Colors.white),
+                      ),
+                      Spacer(),
+                      Icon(
+                        Icons.password,
+                        color: Colors.white,
+                        size: size.width * 0.85 * 0.10,
+                      ),
+                      SizedBox(
+                        width: size.width * 0.7 * 0.06,
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: (size.width * 0.85 - size.width * 0.7) * 0.06),
+                Container(
+                  width: size.width * 0.7,
+                  height: size.width * 0.7,
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        top: size.width * 0.7 * 0.1,
+                        left: size.width * 0.7 * 0.1,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.asset(
+                            "assets/images/wooden_board.png",
+                            height: size.width * 0.7 * 0.8,
+                            width: size.width * 0.7 * 0.8,
+                          ),
+                        ),
+                      ),
+
+                      // top player
+                      Positioned(
+                        top: 0.0,
+                        left: size.width * 0.7 * 0.35,
+                        child: GestureDetector(
+                          onTap: (LobbyItemGlobals.joinedLobby == -1)
+                              ? () {
+                            setState(() async {
+
+                              LobbyItemGlobals.joinedLobby = 2;
+
+                              _sendConnectRequest(createConnectMessage(
+                                  2.toString()));
+                            });
+                          }
+                              : () {
+                            setState(() {
+                              if (LobbyItemGlobals.joinedLobby ==
+                                  2) {
+                                _sendDisconnectRequest(createDisconnectMessage(
+                                    2.toString()));
+
+                                LobbyItemGlobals.joinedLobby = -1;
+                              }
+                            });
+                          },
+                          child: Container(
+                            width: size.width * 0.7 * 0.3,
+                            height: size.width * 0.7 * 0.3,
+                            decoration: BoxDecoration(
+                                border: Border.all(color: Colors.orange, width: 5.0),
+                                borderRadius: BorderRadius.all(
+                                    Radius.circular(size.width * 0.7 * 0.3 * 0.5)),
+                                color: Colors.black87),
+                            child: Padding(
+                              padding: const EdgeInsets.all(5),
+                              child:
+                              (LobbyItemGlobals.joinedLobby != 2)
+                                  ? const FittedBox(
+                                fit: BoxFit.contain,
+                                child: Text(
+                                  "PLAY",
+                                  style: TextStyle(
+                                    color: Colors.green,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              ),
-                            ),
-
-                            // join-leave
-                            Positioned(
-                              top: size.width * 0.7 * 0.33,
-                              left: size.width * 0.7 * 0.35,
-                              child: GestureDetector(
-                                onTap: (LobbyItemGlobals.joinedLobby == -1)
-                                    ? () {
-                                        setState(() {
-                                          LobbyItemGlobals.joinedLobby = 2;
-
-                                          _sendConnectRequest(
-                                              createConnectMessage(
-                                                  2.toString()));
-                                        });
-                                      }
-                                    : () {
-                                        setState(() {
-                                          if (LobbyItemGlobals.joinedLobby ==
-                                              2) {
-                                            _sendDisconnectRequest(
-                                                createDisconnectMessage(
-                                                    2.toString()));
-
-                                            LobbyItemGlobals.joinedLobby = -1;
-                                          }
-                                        });
-                                      },
-                                child: Container(
-                                  width: size.width * 0.7 * 0.3,
-                                  height: size.width * 0.7 * 0.3,
-                                  decoration: BoxDecoration(
-                                      border: Border.all(
-                                          color: Colors.orange, width: 5.0),
-                                      borderRadius: BorderRadius.all(
-                                          Radius.circular(
-                                              size.width * 0.7 * 0.3 * 0.5)),
-                                      color: Colors.black87),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(5),
-                                    child: (LobbyItemGlobals.joinedLobby != 2)
-                                        ? const FittedBox(
-                                            fit: BoxFit.contain,
-                                            child: Text(
-                                              "PLAY",
-                                              style: TextStyle(
-                                                color: Colors.green,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          )
-                                        : const FittedBox(
-                                            fit: BoxFit.contain,
-                                            child: Text(
-                                              "LEAVE",
-                                              style: TextStyle(
-                                                color: Colors.red,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ),
+                              )
+                                  : const FittedBox(
+                                fit: BoxFit.contain,
+                                child: Text(
+                                  "LEAVE",
+                                  style: TextStyle(
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ),
                             ),
+                          ),
+                        ),
+                      ),
 
-                            // top player
-                            Positioned(
-                              top: 0.0,
-                              left: size.width * 0.7 * 0.35,
-                              child: Container(
-                                width: size.width * 0.7 * 0.3,
-                                height: size.width * 0.7 * 0.3,
-                                decoration: BoxDecoration(
-                                    border: Border.all(
-                                        color: const Color(0xff0E77F2), width: 5.0),
-                                    borderRadius: BorderRadius.all(
-                                        Radius.circular(
-                                            size.width * 0.7 * 0.3 * 0.5)),
-                                    color: const Color(0xff04203f)),
-                                child: () {
-                                  if (lobbyScreenGlobals
-                                      .lobbyInformations.isNotEmpty) {
-                                    if (lobbyScreenGlobals.lobbyInformations[1]
-                                            .lobbyPlayers[0] ==
-                                        'empty') {
-                                      return const Icon(Icons.person_off);
-                                    }
-                                    return Image.asset(mainMenuGlobals.picList[
-                                        lobbyScreenGlobals.lobbyInformations[1]
-                                                .lobbyPlayers[0].hashCode %
-                                            mainMenuGlobals.ICON_NUMBER]);
-                                  } else {
-                                    return const Icon(Icons.person_off);
-                                  }
-                                }(),
-                              ),
-                            ),
+                      Positioned(
+                          top: size.width * 0.7 * 0.33,
+                          left: size.width * 0.7 * 0.35,
+                          child: IconButton(iconSize: size.width * 0.18,icon: Icon(Icons.refresh), onPressed: (){
+                            okeyStartCheck();
+                          },)),
 
-                            // right player
-                            Positioned(
-                              top: size.width * 0.85 * 0.27,
-                              right: 0.0,
-                              child: Container(
-                                width: size.width * 0.7 * 0.3,
-                                height: size.width * 0.7 * 0.3,
-                                decoration: BoxDecoration(
-                                    border: Border.all(
-                                        color: const Color(0xff0E77F2), width: 5.0),
-                                    borderRadius: BorderRadius.all(
-                                        Radius.circular(
-                                            size.width * 0.7 * 0.3 * 0.5)),
-                                    color: const Color(0xff04203f)),
-                                child: () {
-                                  if (lobbyScreenGlobals
-                                      .lobbyInformations.isNotEmpty) {
-                                    if (lobbyScreenGlobals.lobbyInformations[1]
-                                            .lobbyPlayers[1] ==
-                                        'empty') {
-                                      return const Icon(Icons.person_off);
-                                    }
-                                    return Image.asset(mainMenuGlobals.picList[
-                                        lobbyScreenGlobals.lobbyInformations[1]
-                                                .lobbyPlayers[1].hashCode %
-                                            mainMenuGlobals.ICON_NUMBER]);
-                                  } else {
-                                    return const Icon(Icons.person_off);
-                                  }
-                                }(),
-                              ),
-                            ),
+                      // right player
+                      Positioned(
+                        top: size.width * 0.85 * 0.27,
+                        right: 0.0,
+                        child: Container(
+                          width: size.width * 0.7 * 0.3,
+                          height: size.width * 0.7 * 0.3,
+                          decoration: BoxDecoration(
+                              border:
+                              Border.all(color: Color(0xff0E77F2), width: 5.0),
+                              borderRadius: BorderRadius.all(
+                                  Radius.circular(size.width * 0.7 * 0.3 * 0.5)),
+                              color: const Color(0xff04203f)),
+                          child: (){
+                            if(lobbyScreenGlobals.lobbyInformations.isNotEmpty){
+                              if(lobbyScreenGlobals.lobbyInformations[1].lobbyPlayers[0] == 'empty'){
+                                return Icon(Icons.person_off);
+                              }
+                              return Image.asset(mainMenuGlobals.picList[
+                              lobbyScreenGlobals.lobbyInformations[1].lobbyPlayers[0].hashCode % mainMenuGlobals.ICON_NUMBER]);
+                            }else{
+                              return Icon(Icons.person_off);
+                            }
 
-                            // bottom player
-                            Positioned(
-                              bottom: 0.0,
-                              left: size.width * 0.7 * 0.35,
-                              child: Container(
-                                width: size.width * 0.7 * 0.3,
-                                height: size.width * 0.7 * 0.3,
-                                decoration: BoxDecoration(
-                                    border: Border.all(
-                                        color: const Color(0xff0E77F2), width: 5.0),
-                                    borderRadius: BorderRadius.all(
-                                        Radius.circular(
-                                            size.width * 0.7 * 0.3 * 0.5)),
-                                    color: const Color(0xff04203f)),
-                                child: () {
-                                  if (lobbyScreenGlobals
-                                      .lobbyInformations.isNotEmpty) {
-                                    if (lobbyScreenGlobals.lobbyInformations[1]
-                                            .lobbyPlayers[2] ==
-                                        'empty') {
-                                      return const Icon(Icons.person_off);
-                                    }
-                                    return Image.asset(mainMenuGlobals.picList[
-                                        lobbyScreenGlobals.lobbyInformations[1]
-                                                .lobbyPlayers[2].hashCode %
-                                            mainMenuGlobals.ICON_NUMBER]);
-                                  } else {
-                                    return const Icon(Icons.person_off);
-                                  }
-                                }(),
-                              ),
-                            ),
+                              }(),
+                        ),
+                      ),
 
-                            // left player
-                            Positioned(
-                              top: size.width * 0.85 * 0.27,
-                              left: 0.0,
-                              child: Container(
-                                width: size.width * 0.7 * 0.3,
-                                height: size.width * 0.7 * 0.3,
-                                decoration: BoxDecoration(
-                                    border: Border.all(
-                                        color: const Color(0xff0E77F2), width: 5.0),
-                                    borderRadius: BorderRadius.all(
-                                        Radius.circular(
-                                            size.width * 0.7 * 0.3 * 0.5)),
-                                    color: const Color(0xff04203f)),
-                                child: () {
-                                  if (lobbyScreenGlobals
-                                      .lobbyInformations.isNotEmpty) {
-                                    if (lobbyScreenGlobals.lobbyInformations[1]
-                                            .lobbyPlayers[3] ==
-                                        'empty') {
-                                      return const Icon(Icons.person_off);
-                                    }
-                                    return Image.asset(mainMenuGlobals.picList[
-                                        lobbyScreenGlobals.lobbyInformations[1]
-                                                .lobbyPlayers[3].hashCode %
-                                            mainMenuGlobals.ICON_NUMBER]);
-                                  } else {
-                                    return const Icon(Icons.person_off);
-                                  }
-                                }(),
-                              ),
-                            ),
-                          ],
+                      // bottom player
+                      Positioned(
+                        bottom: 0.0,
+                        left: size.width * 0.7 * 0.35,
+                        child: Container(
+                          width: size.width * 0.7 * 0.3,
+                          height: size.width * 0.7 * 0.3,
+                          decoration: BoxDecoration(
+                              border:
+                              Border.all(color: Color(0xff0E77F2), width: 5.0),
+                              borderRadius: BorderRadius.all(
+                                  Radius.circular(size.width * 0.7 * 0.3 * 0.5)),
+                              color: const Color(0xff04203f)),
+                          child: (){
+                            if(lobbyScreenGlobals.lobbyInformations.isNotEmpty){
+                              if(lobbyScreenGlobals.lobbyInformations[1].lobbyPlayers[1] == 'empty'){
+                                return Icon(Icons.person_off);
+                              }
+                              return Image.asset(mainMenuGlobals.picList[
+                              lobbyScreenGlobals.lobbyInformations[1].lobbyPlayers[1].hashCode % mainMenuGlobals.ICON_NUMBER]);
+                            }else{
+                              return Icon(Icons.person_off);
+                            }
+
+                              }(),
+                        ),
+                      ),
+
+                      // left player
+                      Positioned(
+                        top: size.width * 0.85 * 0.27,
+                        left: 0.0,
+                        child: Container(
+                          width: size.width * 0.7 * 0.3,
+                          height: size.width * 0.7 * 0.3,
+                          decoration: BoxDecoration(
+                              border:
+                              Border.all(color: Color(0xff0E77F2), width: 5.0),
+                              borderRadius: BorderRadius.all(
+                                  Radius.circular(size.width * 0.7 * 0.3 * 0.5)),
+                              color: const Color(0xff04203f)),
+                          child: (){
+                            if(lobbyScreenGlobals.lobbyInformations.isNotEmpty){
+                              if(lobbyScreenGlobals.lobbyInformations[1].lobbyPlayers[2] == 'empty'){
+                                return Icon(Icons.person_off);
+                              }
+                              return Image.asset(mainMenuGlobals.picList[
+                              lobbyScreenGlobals.lobbyInformations[1].lobbyPlayers[2].hashCode % mainMenuGlobals.ICON_NUMBER]);
+                            }else{
+                              return Icon(Icons.person_off);
+                            }
+
+                              }(),
                         ),
                       ),
                     ],
                   ),
                 ),
+              ],
+            ),
+          ),
                 SizedBox(
                   height: safeAreaHeight * 0.1,
                 ),
