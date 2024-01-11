@@ -1,6 +1,3 @@
-import 'dart:convert';
-
-import 'package:ceng_mainpage/screen/lobby_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:dotted_border/dotted_border.dart';
@@ -149,6 +146,13 @@ class _LudoScreenState extends State<LudoScreen> {
     'b':[187, 172, 157, 142]
   };
 
+  static final Map<String, int> pathStartLogIndexes ={
+    'r': 0,
+    'g': 13,
+    'y': 26,
+    'b': 39
+  };
+
   // For dice animations.
   int counterTimer = 0;
   int currentImageIndex = 0;
@@ -200,65 +204,6 @@ class _LudoScreenState extends State<LudoScreen> {
     catch(error){
       //print("An error occurred while opening/writing socket.");
     }
-  }
-
-  String createQuitRequestMessage(){
-
-    String created = '';
-
-    const String iQuit = 'QUIT|';
-
-    created += iQuit;
-
-    created += loginGlobals.token;
-
-    created += '|';
-
-    created += '1'; // Lobby id of the ludo
-
-    return created;
-  }
-
-  void _sendQuitRequest(String quitReq) async {
-
-    try {
-      // Create a new socket for each request
-      // 10.42.0.1 IP of rasp
-      Socket _socket = await Socket.connect(loginGlobals.piIP, 8080);
-
-      print('SERVER PATLIYO QUITTE');
-      // Send a simple message to the server
-      _socket.write(quitReq);
-
-      // Listen for responses from the server
-      _socket.listen(
-            (List<int> data) {
-          // Convert the received data to a String
-          String response = utf8.decode(data);
-
-          print('EZPEZLEMONSQZ: $response');
-
-          // Update the UI with the received response
-          // print('Received from server MOVE: $response');
-
-          // Close the socket after receiving a response
-          _socket.close();
-        },
-        onDone: () {
-          // Handle when the server closes the connection
-          print('Server closed the connection');
-        },
-        onError: (error) {
-          // Handle any errors that occur during communication
-          print('Error receiving response: $error');
-          // Close the socket in case of an error
-          _socket.close();
-        },
-      );
-    } catch (e) {
-      print('Error sending request: $e');
-    }
-
   }
 
   void handleGetLudo(String receivedData){
@@ -324,6 +269,8 @@ class _LudoScreenState extends State<LudoScreen> {
     }
   }
 
+  /*
+  // TODO: calcProgress ile yapılcak ilerde.
   bool didIwin(){
     bool win=true;
     for(int myPawnPos in pawnPositions.sublist(sublistMap[myColor]![0], sublistMap[myColor]![1])){
@@ -333,6 +280,38 @@ class _LudoScreenState extends State<LudoScreen> {
       }
     }
     return win;
+  }
+  */
+
+  int calcProgressOfColor(String clr){
+    int progress=0;
+    int logIndex;
+
+    for(int pawnPos in pawnPositions.sublist(sublistMap[clr]![0], sublistMap[clr]![1])){
+      logIndex=convertPhysicalIndex2Logical(pawnPos);
+
+      // If in path
+      if(logIndex>=0 && logIndex<=51){
+        progress += 6+((logIndex-pathStartLogIndexes[clr]!)%52);
+      }
+      // If in safe area (not in base)
+      else if(!initialPawnPositions.sublist(sublistMap[clr]![0], sublistMap[clr]![1]).contains(pawnPos)){
+        progress += 6+51+(5-(convertPhysicalIndex2Logical(winPositions[clr]![3])-logIndex));
+      }
+    }
+
+    return progress;
+  }
+
+  // Returns a map containing the progress of the colors r, g, y, b.
+  // Progress ratio for a player is calculated by dividing the returned integer by 242.
+  Map<String, int> calcProgress(){
+    return {
+      'r': calcProgressOfColor('r'),
+      'g': calcProgressOfColor('g'),
+      'y': calcProgressOfColor('y'),
+      'b': calcProgressOfColor('b')
+    };
   }
 
   bool checkRestriction(Player? targetClr) {
@@ -367,8 +346,13 @@ class _LudoScreenState extends State<LudoScreen> {
           targetIndex = moveList[1][0] * 15 + moveList[1][1];
           targetClr = moveList[1][2];
 
-          if (checkCollision(targetIndex) && checkRestriction(targetClr)) {
-            return targetIndex;
+          if (checkRestriction(targetClr)) {
+            if(checkCollision(targetIndex)){
+              return targetIndex;
+            }
+            else{
+              return -1;
+            }
           }
         }
 
@@ -505,6 +489,9 @@ class _LudoScreenState extends State<LudoScreen> {
               moveRequest += "|$eatenPawnNum|$eatenPawnLogInd";
             }
 
+            Map<String, int> p=calcProgress();
+            moveRequest += "/${p['r']}|${p['g']}|${p['y']}|${p['b']}";
+
             // Send the performed move.
             sendRequest(reqType: "MAKEMOVE", request: moveRequest);
 
@@ -523,7 +510,7 @@ class _LudoScreenState extends State<LudoScreen> {
               highlightedTilePositions.clear();
             });
 
-            if(didIwin()){
+            if(p[myColor]==242){
               sendRequest(reqType: "IWON", request: "IWON|${loginGlobals.token}|1");
             }
 
@@ -633,142 +620,129 @@ class _LudoScreenState extends State<LudoScreen> {
     return Scaffold(
       backgroundColor: const Color(0xff90ae90),
       resizeToAvoidBottomInset: false,
-      body: PopScope(
-        canPop: true,
-        onPopInvoked: (bool didPop) {
-          _showExitDialog(context);
-          return;
-        },
-        child: SingleChildScrollView(
-          physics: const NeverScrollableScrollPhysics(),
-          child: SafeArea(
-            child: Column(
-              children: [
-                Container(
-                  height: turnInfoHeight,
-                  width: size.width,
-                  //color: Colors.red,
-                  child: Row(
-                    children: [
-                      Positioned(
-                        top: 16.0,
-                        right: 16.0,
-                        child: FloatingActionButton(
-                          onPressed: () {
-                            _showExitDialog(context);
-                          },
-                          tooltip: 'Leave',
-                          child: const Icon(Icons.exit_to_app),
-                        ),
+      body: SingleChildScrollView(
+        physics: const NeverScrollableScrollPhysics(),
+        child: SafeArea(
+          child: Column(
+            children: [
+              Container(
+                height: turnInfoHeight,
+                width: size.width,
+                //color: Colors.red,
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: size.width * 0.05,
+                    ),
+                    Container(
+                      width: size.width * 0.6,
+                      child: Row(
+                        children: [
+                          Text(
+                            "Turn: ",
+                            style: TextStyle(fontSize: turnInfoHeight * 0.3),
+                          ),
+                          Text(
+                            (myName==strTurnName) ? "Your" : strTurnColor,
+                            style: TextStyle(
+                                color: () {
+                                  if (strTurnColor == "Red") {
+                                    return Colors.red[900];
+                                  } else if (strTurnColor == "Green") {
+                                    return Colors.green[900];
+                                  } else if (strTurnColor == "Yellow") {
+                                    return Colors.yellow[900];
+                                  } else if (strTurnColor == "Blue") {
+                                    return Colors.blue[900];
+                                  } else {
+                                    return Colors.black;
+                                  }
+                                }(),
+                                fontWeight: FontWeight.bold,
+                                fontSize: turnInfoHeight * 0.35),
+                          ),
+                          SizedBox(
+                            width: size.width * 0.04,
+                          ),
+                          Text(
+                            "Dice: ",
+                            style: TextStyle(fontSize: turnInfoHeight * 0.3),
+                          ),
+                          SizedBox(
+                            width: size.width * 0.01,
+                          ),
+                          Image.asset(
+                            diceImages[int.parse(lastDice)],
+                            height: turnInfoHeight * 0.4,
+                          ),
+                        ],
                       ),
-                      SizedBox(
-                        width: size.width * 0.05,
+                    ),
+                    const Spacer(),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
                       ),
-                      Container(
-                        width: size.width * 0.6,
-                        child: Row(
-                          children: [
-                            Text(
-                              "Turn: ",
-                              style: TextStyle(fontSize: turnInfoHeight * 0.3),
-                            ),
-                            Text(
-                              (myName==strTurnName) ? "Your" : strTurnColor,
-                              style: TextStyle(
-                                  color: () {
-                                    if (strTurnColor == "Red") {
-                                      return Colors.red[900];
-                                    } else if (strTurnColor == "Green") {
-                                      return Colors.green[900];
-                                    } else if (strTurnColor == "Yellow") {
-                                      return Colors.yellow[900];
-                                    } else if (strTurnColor == "Blue") {
-                                      return Colors.blue[900];
-                                    } else {
-                                      return Colors.black;
-                                    }
-                                  }(),
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: turnInfoHeight * 0.35),
-                            ),
-                            SizedBox(
-                              width: size.width * 0.04,
-                            ),
-                            Text(
-                              "Dice: ",
-                              style: TextStyle(fontSize: turnInfoHeight * 0.3),
-                            ),
-                            SizedBox(
-                              width: size.width * 0.01,
-                            ),
-                            Image.asset(
-                              diceImages[int.parse(lastDice)],
-                              height: turnInfoHeight * 0.4,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Spacer(),
-                      SizedBox(
-                        width: size.width * 0.05,
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  height: boardHeight,
-                  width: size.width,
-                  //color: Colors.blue,
-                  child: Transform.rotate(
-                    angle: transformValue,
-                    child: Stack(
-                      children: [
-                        SizedBox(
-                          height: boardHeight,
-                          width: size.width,
-                          child: const Image(
-                            image: AssetImage(
-                                'assets/images/ludo_board_homeless.png'),
+                      onPressed: () { /* TODO */ },
+                      child: const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: FittedBox(
+                          fit: BoxFit.fitHeight,
+                          child: Text(
+                            "Quit",
+                            style: TextStyle(color: Colors.white),
                           ),
                         ),
-                        Container(
-                          height: boardHeight,
-                          width: size.width,
-                          child: GridView.builder(
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: 15 * 15,
-                            gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 15),
-                            itemBuilder: (context, index) {
-                              if (pawnPositions.sublist(0, 4).contains(index)) {
-                                return GestureDetector(
-                                  onTap: convertPhysicalIndex2Logical(index) != -1
-                                      ? () {
-                                    gridOnTap(index);
-                                  }
-                                      : null,
-                                  child: Padding(
-                                    padding: EdgeInsets.all(boardHeight * 0.008),
-                                    child:
-                                    highlightedTilePositions.contains(index)
-                                        ? DottedBorder(
-                                      borderType: BorderType.RRect,
-                                      strokeWidth: 2,
-                                      color: Colors.black,
-                                      child: SizedBox(
-                                        height: boardHeight * 0.06,
-                                        width: boardHeight * 0.06,
-                                        child: Transform.rotate(
-                                          angle: -transformValue,
-                                          child: const Image(
-                                            image: AssetImage(
-                                                'assets/images/red_pawn.png'),
-                                          ),
-                                        ),
-                                      ),
-                                    )
-                                        : SizedBox(
+                      ),
+                    ),
+                    SizedBox(
+                      width: size.width * 0.05,
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                height: boardHeight,
+                width: size.width,
+                //color: Colors.blue,
+                child: Transform.rotate(
+                  angle: transformValue,
+                  child: Stack(
+                    children: [
+                      SizedBox(
+                        height: boardHeight,
+                        width: size.width,
+                        child: const Image(
+                          image: AssetImage(
+                              'assets/images/ludo_board_homeless.png'),
+                        ),
+                      ),
+                      Container(
+                        height: boardHeight,
+                        width: size.width,
+                        child: GridView.builder(
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: 15 * 15,
+                          gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 15),
+                          itemBuilder: (context, index) {
+                            if (pawnPositions.sublist(0, 4).contains(index)) {
+                              return GestureDetector(
+                                onTap: convertPhysicalIndex2Logical(index) != -1
+                                    ? () {
+                                  gridOnTap(index);
+                                }
+                                    : null,
+                                child: Padding(
+                                  padding: EdgeInsets.all(boardHeight * 0.008),
+                                  child:
+                                  highlightedTilePositions.contains(index)
+                                      ? DottedBorder(
+                                    borderType: BorderType.RRect,
+                                    strokeWidth: 2,
+                                    color: Colors.black,
+                                    child: SizedBox(
                                       height: boardHeight * 0.06,
                                       width: boardHeight * 0.06,
                                       child: Transform.rotate(
@@ -779,38 +753,38 @@ class _LudoScreenState extends State<LudoScreen> {
                                         ),
                                       ),
                                     ),
-                                  ),
-                                );
-                              } else if (pawnPositions
-                                  .sublist(4, 8)
-                                  .contains(index)) {
-                                return GestureDetector(
-                                  onTap: convertPhysicalIndex2Logical(index) != -1
-                                      ? () {
-                                    gridOnTap(index);
-                                  }
-                                      : null,
-                                  child: Padding(
-                                    padding: EdgeInsets.all(boardHeight * 0.008),
-                                    child:
-                                    highlightedTilePositions.contains(index)
-                                        ? DottedBorder(
-                                      borderType: BorderType.RRect,
-                                      strokeWidth: 2,
-                                      color: Colors.black,
-                                      child: SizedBox(
-                                        height: boardHeight * 0.06,
-                                        width: boardHeight * 0.06,
-                                        child: Transform.rotate(
-                                          angle: -transformValue,
-                                          child: const Image(
-                                            image: AssetImage(
-                                                'assets/images/green_pawn.png'),
-                                          ),
-                                        ),
+                                  )
+                                      : SizedBox(
+                                    height: boardHeight * 0.06,
+                                    width: boardHeight * 0.06,
+                                    child: Transform.rotate(
+                                      angle: -transformValue,
+                                      child: const Image(
+                                        image: AssetImage(
+                                            'assets/images/red_pawn.png'),
                                       ),
-                                    )
-                                        : SizedBox(
+                                    ),
+                                  ),
+                                ),
+                              );
+                            } else if (pawnPositions
+                                .sublist(4, 8)
+                                .contains(index)) {
+                              return GestureDetector(
+                                onTap: convertPhysicalIndex2Logical(index) != -1
+                                    ? () {
+                                  gridOnTap(index);
+                                }
+                                    : null,
+                                child: Padding(
+                                  padding: EdgeInsets.all(boardHeight * 0.008),
+                                  child:
+                                  highlightedTilePositions.contains(index)
+                                      ? DottedBorder(
+                                    borderType: BorderType.RRect,
+                                    strokeWidth: 2,
+                                    color: Colors.black,
+                                    child: SizedBox(
                                       height: boardHeight * 0.06,
                                       width: boardHeight * 0.06,
                                       child: Transform.rotate(
@@ -821,36 +795,36 @@ class _LudoScreenState extends State<LudoScreen> {
                                         ),
                                       ),
                                     ),
-                                  ),
-                                );
-                              } else if (pawnPositions.sublist(8, 12).contains(index)) {
-                                return GestureDetector(
-                                  onTap: convertPhysicalIndex2Logical(index) != -1
-                                      ? () {
-                                    gridOnTap(index);
-                                  }
-                                      : null,
-                                  child: Padding(
-                                    padding: EdgeInsets.all(boardHeight * 0.008),
-                                    child:
-                                    highlightedTilePositions.contains(index)
-                                        ? DottedBorder(
-                                      borderType: BorderType.RRect,
-                                      strokeWidth: 2,
-                                      color: Colors.black,
-                                      child: SizedBox(
-                                        height: boardHeight * 0.06,
-                                        width: boardHeight * 0.06,
-                                        child: Transform.rotate(
-                                          angle: -transformValue,
-                                          child: const Image(
-                                            image: AssetImage(
-                                                'assets/images/yellow_pawn.png'),
-                                          ),
-                                        ),
+                                  )
+                                      : SizedBox(
+                                    height: boardHeight * 0.06,
+                                    width: boardHeight * 0.06,
+                                    child: Transform.rotate(
+                                      angle: -transformValue,
+                                      child: const Image(
+                                        image: AssetImage(
+                                            'assets/images/green_pawn.png'),
                                       ),
-                                    )
-                                        : SizedBox(
+                                    ),
+                                  ),
+                                ),
+                              );
+                            } else if (pawnPositions.sublist(8, 12).contains(index)) {
+                              return GestureDetector(
+                                onTap: convertPhysicalIndex2Logical(index) != -1
+                                    ? () {
+                                  gridOnTap(index);
+                                }
+                                    : null,
+                                child: Padding(
+                                  padding: EdgeInsets.all(boardHeight * 0.008),
+                                  child:
+                                  highlightedTilePositions.contains(index)
+                                      ? DottedBorder(
+                                    borderType: BorderType.RRect,
+                                    strokeWidth: 2,
+                                    color: Colors.black,
+                                    child: SizedBox(
                                       height: boardHeight * 0.06,
                                       width: boardHeight * 0.06,
                                       child: Transform.rotate(
@@ -861,36 +835,36 @@ class _LudoScreenState extends State<LudoScreen> {
                                         ),
                                       ),
                                     ),
-                                  ),
-                                );
-                              } else if (pawnPositions.sublist(12, 16).contains(index)) {
-                                return GestureDetector(
-                                  onTap: convertPhysicalIndex2Logical(index) != -1
-                                      ? () {
-                                    gridOnTap(index);
-                                  }
-                                      : null,
-                                  child: Padding(
-                                    padding: EdgeInsets.all(boardHeight * 0.008),
-                                    child:
-                                    highlightedTilePositions.contains(index)
-                                        ? DottedBorder(
-                                      borderType: BorderType.RRect,
-                                      strokeWidth: 2,
-                                      color: Colors.black,
-                                      child: SizedBox(
-                                        height: boardHeight * 0.06,
-                                        width: boardHeight * 0.06,
-                                        child: Transform.rotate(
-                                          angle: -transformValue,
-                                          child: const Image(
-                                            image: AssetImage(
-                                                'assets/images/blue_pawn.png'),
-                                          ),
-                                        ),
+                                  )
+                                      : SizedBox(
+                                    height: boardHeight * 0.06,
+                                    width: boardHeight * 0.06,
+                                    child: Transform.rotate(
+                                      angle: -transformValue,
+                                      child: const Image(
+                                        image: AssetImage(
+                                            'assets/images/yellow_pawn.png'),
                                       ),
-                                    )
-                                        : SizedBox(
+                                    ),
+                                  ),
+                                ),
+                              );
+                            } else if (pawnPositions.sublist(12, 16).contains(index)) {
+                              return GestureDetector(
+                                onTap: convertPhysicalIndex2Logical(index) != -1
+                                    ? () {
+                                  gridOnTap(index);
+                                }
+                                    : null,
+                                child: Padding(
+                                  padding: EdgeInsets.all(boardHeight * 0.008),
+                                  child:
+                                  highlightedTilePositions.contains(index)
+                                      ? DottedBorder(
+                                    borderType: BorderType.RRect,
+                                    strokeWidth: 2,
+                                    color: Colors.black,
+                                    child: SizedBox(
                                       height: boardHeight * 0.06,
                                       width: boardHeight * 0.06,
                                       child: Transform.rotate(
@@ -901,124 +875,90 @@ class _LudoScreenState extends State<LudoScreen> {
                                         ),
                                       ),
                                     ),
-                                  ),
-                                );
-                              }
-                              if (highlightedTilePositions.contains(index)) {
-                                return GestureDetector(
-                                  onTap: convertPhysicalIndex2Logical(index) != -1
-                                      ? () {
-                                    gridOnTap(index);
-                                  }
-                                      : null,
-                                  child: Padding(
-                                    padding: EdgeInsets.all(boardHeight * 0.008),
-                                    child: DottedBorder(
-                                      borderType: BorderType.RRect,
-                                      strokeWidth: 2,
-                                      color: Colors.black,
-                                      child: SizedBox(
-                                        height: boardHeight * 0.06,
-                                        width: boardHeight * 0.06,
-                                        //color: Colors.black,
+                                  )
+                                      : SizedBox(
+                                    height: boardHeight * 0.06,
+                                    width: boardHeight * 0.06,
+                                    child: Transform.rotate(
+                                      angle: -transformValue,
+                                      child: const Image(
+                                        image: AssetImage(
+                                            'assets/images/blue_pawn.png'),
                                       ),
                                     ),
                                   ),
-                                );
-                              } else {
-                                return const SizedBox.shrink();
-                              }
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                Container(
-                  height: diceAreaHeight,
-                  width: size.width,
-                  child: Column(
-                    children: [
-                      SizedBox(height: diceAreaHeight * 0.12,),
-                      SizedBox(
-                        height: diceAreaHeight * 0.5,
-                        width: size.width,
-                        child: Transform.rotate(
-                          angle: diceTransformValue,
-                          child: Image.asset(
-                            diceImages[currentImageIndex],
-                            height: diceAreaHeight * 0.5,
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: diceAreaHeight * 0.06),
-                      Opacity(
-                        opacity: rollBtnEnabled ? 1.0 : 0.9,
-                        child: ElevatedButton(
-                          onPressed: rollBtnEnabled ? rollOnTap : null,
-                          child: Padding(
-                            padding: const EdgeInsets.all(2.0),
-                            child: Text(
-                              "Roll",
-                              style: TextStyle(fontSize: diceAreaHeight * 0.12),
-                            ),
-                          ),
+                                ),
+                              );
+                            }
+                            if (highlightedTilePositions.contains(index)) {
+                              return GestureDetector(
+                                onTap: convertPhysicalIndex2Logical(index) != -1
+                                    ? () {
+                                  gridOnTap(index);
+                                }
+                                    : null,
+                                child: Padding(
+                                  padding: EdgeInsets.all(boardHeight * 0.008),
+                                  child: DottedBorder(
+                                    borderType: BorderType.RRect,
+                                    strokeWidth: 2,
+                                    color: Colors.black,
+                                    child: SizedBox(
+                                      height: boardHeight * 0.06,
+                                      width: boardHeight * 0.06,
+                                      //color: Colors.black,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            } else {
+                              return const SizedBox.shrink();
+                            }
+                          },
                         ),
                       ),
                     ],
                   ),
                 ),
-              ],
-            ),
+              ),
+              Container(
+                height: diceAreaHeight,
+                width: size.width,
+                child: Column(
+                  children: [
+                    SizedBox(height: diceAreaHeight * 0.12,),
+                    SizedBox(
+                      height: diceAreaHeight * 0.5,
+                      width: size.width,
+                      child: Transform.rotate(
+                        angle: diceTransformValue,
+                        child: Image.asset(
+                          diceImages[currentImageIndex],
+                          height: diceAreaHeight * 0.5,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: diceAreaHeight * 0.06),
+                    Opacity(
+                      opacity: rollBtnEnabled ? 1.0 : 0.9,
+                      child: ElevatedButton(
+                        onPressed: rollBtnEnabled ? rollOnTap : null,
+                        child: Padding(
+                          padding: const EdgeInsets.all(2.0),
+                          child: Text(
+                            "Roll",
+                            style: TextStyle(fontSize: diceAreaHeight * 0.12),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
-
-  Future<bool> _showExitDialog(BuildContext context) async {
-    bool exit = false;
-
-    await showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Are you sure?'),
-          content: Text('Leaving the game will destroy the ludo game and result in -1 point penalty!'),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                exit = false;
-                Navigator.of(context).pop();
-              },
-              child: Text('No, I will stay.'),
-            ),
-            TextButton(
-              onPressed: () {
-                exit = true;
-                Navigator.of(context).pop();
-              },
-              child: Text('Yes, leave anyway.'),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (exit) {
-      _sendQuitRequest(createQuitRequestMessage());
-      _navigateToLobby();
-    }
-
-    return Future.value(!exit); // Return whether to allow or block the exit
-  }
-
-  void _navigateToLobby() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => LobbyScreen()),
-    );
-  }
-
 }

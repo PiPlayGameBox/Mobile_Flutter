@@ -20,6 +20,7 @@ import 'package:ceng_mainpage/widget/turnpassed_middle_tile.dart';
 import 'package:ceng_mainpage/widget/turnpassed_right_tile.dart';
 import 'package:ceng_mainpage/screens/login_screen.dart';
 import 'package:ceng_mainpage/screen/main_menu_screen.dart';
+import 'package:ceng_mainpage/widget/win_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:dotted_border/dotted_border.dart';
@@ -28,11 +29,25 @@ import 'dart:async';
 import 'package:provider/provider.dart';
 
 String resp = '0';
-String exampleResponse = 'OK/E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|/E|E|E|E|/E|E|48/huseyin';
+String exampleResponse = 'OK/E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|/E|E|E|E|/E|E|48/empty/empty/empty';
 bool isTurn = false; // Checks if its user's turn. When user gets a tile, this becomes false and makes the isGet true and waits for the user to throw tile.
 bool isGet = false; // Becomes true when tile get from board, becomes false when tile thrown.
 int numberOfTiles = 0;
 int won = 0;
+String winnerPlayer = 'empty'; // first empty is winner,
+String quitterPlayer = 'empty';
+
+void globReset(){
+  resp = '0';
+  exampleResponse = 'OK/E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|E|/E|E|E|E|/E|E|48/empty/empty/empty';
+  isTurn = false;
+  isGet = false;
+  numberOfTiles = 0;
+  won = 0;
+  winnerPlayer = 'empty';
+  quitterPlayer = 'empty';
+}
+
 /*'OK/B4_1|Y10_2|B13_1|E|R4_1|R10_1|K11_2|B6_2|E|K9_2|K6_2|E|B12_1|B1_2|E|E|E|E|K5_2|E|E|E|E|E|E|Y5_2|E|E|E|Y13_1|/E|B9_2|Y9_2|Y10_1|/Y4_2|B7_2|47';*/
 /*
   OK, tiles, floor (floor[3]=next tile to get), (spoiler tile to get middle, okey, tiles left.)
@@ -550,8 +565,38 @@ class _RummikubScreenState extends State<RummikubScreen> {
 
   Widget winRummyTile = Container();
 
-  void constructWinRummyTile(double rummyTileHeight, double rummyTileWidth, bool isMyTurn){
+  void constructWinRummyTile(double rummyTileHeight, double rummyTileWidth, bool isMyTurn, bool isGetted, int won){
 
+    print('WONNN GİRDİK ${ (playersTurnInfo == loginGlobals.username)}');
+    print('WONNN GİRDİK $isGetted');
+    print('WONNN GİRDİK $won');
+
+    if( (playersTurnInfo == loginGlobals.username) && isGetted == true && won == 14){
+
+
+      print('WONNN GİRDİK $isGetted');
+      print('WONNN GİRDİK $won');
+
+      setState(() {
+
+        winRummyTile = WinTile(
+          rummyTileHeight: rummyTileHeight,
+          rummyTileWidth: rummyTileWidth,
+          takozIndex: '40', // They are not at the takoz but we continue indexing them from 30.
+          anyRummyClicked: anyRummyClicked,
+        );
+
+      });
+
+
+    }
+    else{ // User has 14 tiles on takoz.
+
+      setState(() {
+        winRummyTile = const SizedBox.shrink();
+      });
+
+    }
 
   }
 
@@ -576,6 +621,7 @@ class _RummikubScreenState extends State<RummikubScreen> {
         );
       }else{ // If we get a normal tile,
 
+        print('FULL TILE: $fullTile');
         List<String> parsedTile = fullTile.split('_'); // We parse tile to 2. index 0 is R1 and index 1 is 1 (clone number) in example.
 
         String tileWithColor = parsedTile[0]; // R10, R9
@@ -750,6 +796,23 @@ class _RummikubScreenState extends State<RummikubScreen> {
     const String iQuit = 'QUIT|';
 
     created += iQuit;
+
+    created += loginGlobals.token;
+
+    created += '|';
+
+    created += '2'; // Lobby id of the okey
+
+    return created;
+  }
+
+  String createWinRequestMessage(){
+
+    String created = '';
+
+    const String iWin = 'WIN|';
+
+    created += iWin;
 
     created += loginGlobals.token;
 
@@ -954,6 +1017,47 @@ class _RummikubScreenState extends State<RummikubScreen> {
 
   }
 
+  void _sendWinRequest(String winReq) async {
+
+    try {
+      // Create a new socket for each request
+      // 10.42.0.1 IP of rasp
+      Socket _socket = await Socket.connect(loginGlobals.piIP, 8080);
+
+      print('SERVER PATLIYO MU WINDE');
+      // Send a simple message to the server
+      _socket.write(winReq);
+
+      // Listen for responses from the server
+      _socket.listen(
+            (List<int> data) {
+          // Convert the received data to a String
+          String response = utf8.decode(data);
+
+          print('Yok patlamıyo winde: $response');
+
+          // Update the UI with the received response
+          // print('Received from server MOVE: $response');
+
+          // Close the socket after receiving a response
+          _socket.close();
+        },
+        onDone: () {
+          // Handle when the server closes the connection
+          print('Server closed the connection');
+        },
+        onError: (error) {
+          // Handle any errors that occur during communication
+          print('Error receiving response: $error');
+          // Close the socket in case of an error
+          _socket.close();
+        },
+      );
+    } catch (e) {
+      print('Error sending request: $e');
+    }
+
+  }
 
 
   // Our initial state is here.
@@ -968,6 +1072,13 @@ class _RummikubScreenState extends State<RummikubScreen> {
     String strTilesThrown = '';
     String strMiddleTiles = '';
     String strUserTurn = '';
+    String strWinner = '';
+    String strQuitter = '';
+
+    setState(() {
+      globReset();
+    });
+
 
     timer = Timer.periodic(const Duration(milliseconds: 100), (Timer timer) {
 
@@ -975,12 +1086,14 @@ class _RummikubScreenState extends State<RummikubScreen> {
 
         List<String> array = exampleResponse.split('/'); // We parse the response here.
 
-        if(array.length>=2){
+        if(array.length>=6){
           strChecker = array[0];
           strTilesTakoz = array[1];
           strTilesThrown = array[2];
           strMiddleTiles = array[3];
           strUserTurn = array[4];
+          strWinner = array[5];
+          strQuitter = array[6];
         }
 
         String checker = strChecker;    // We get the checker here.
@@ -988,6 +1101,10 @@ class _RummikubScreenState extends State<RummikubScreen> {
         List<String> tilesThrown = strTilesThrown.split('|');    // We parse the tiles thrown to board here.
         List<String> middleTiles = strMiddleTiles.split('|');    // We parse the middle tiles here.
         String userTurn = strUserTurn;    // We get the username of this turn.
+
+        winnerPlayer = strWinner;
+
+        quitterPlayer = strQuitter;
 
         RummikubData newRummikubData = RummikubData(checker, tilesTakoz, tilesThrown, middleTiles, userTurn);
 
@@ -1003,6 +1120,22 @@ class _RummikubScreenState extends State<RummikubScreen> {
         }
 
         dataProvider.updateRummikubData(newRummikubData);
+
+        if(quitterPlayer != 'empty'){
+          if(quitterPlayer != ''){
+            timer.cancel();
+            _showQuitterDialog(context);
+
+          }
+        }
+
+
+        if(winnerPlayer != 'empty'){
+          if(winnerPlayer != '') {
+            timer.cancel();
+            _showWinDialog(context);
+          }
+        }
 
         /*print('After::::');
         print(exampleResponse);*/
@@ -1037,6 +1170,8 @@ class _RummikubScreenState extends State<RummikubScreen> {
         constructThrown(rmtH, rmtW, isTurn, isGet);
 
         constructMiddle(rmtH, rmtW, isTurn);
+
+        constructWinRummyTile(rmtH, rmtW, isTurn, isGet, won);
 
 
         print('ISTURN: $isTurn');
@@ -1088,6 +1223,8 @@ class _RummikubScreenState extends State<RummikubScreen> {
 
         constructMiddle(rmtH, rmtW, isTurn);
 
+        constructWinRummyTile(rmtH, rmtW, isTurn, isGet, won);
+
         // Checks if user get tile from left.
         if(TurnbasedClickableRummyTileGlobals.isAnyClicked){ // Soldaki taş index = 33;
 
@@ -1127,6 +1264,36 @@ class _RummikubScreenState extends State<RummikubScreen> {
 
         constructMiddle(rmtH, rmtW, isTurn);
 
+        constructWinRummyTile(rmtH, rmtW, isTurn, isGet, won);
+
+        // This function checks if user thrown any tile to win.
+        if(ClickableRummyTileGlobals.isAnyClicked){
+
+          if(toTile == 40){ // If win tile is selected after that,
+
+            String thrownTileStr = tilesTakoz[fromTile]; // Gets the clicked tile,
+
+            timer.cancel();
+
+            _sendWinRequest(createWinRequestMessage());
+
+            _showWinDialog(context);
+
+            ClickableRummyTileGlobals.isAnyClicked = false;
+            EmptyRummyTileGlobals.isAnyEmptyClicked = false;
+            // Resetting the global index of clicked.
+            EmptyRummyTileGlobals.placedTileIndex = -1;
+
+            ClickableRummyTileGlobals.clickedTileIndex = -1;
+
+            // Its thrown. All turns passed
+            isTurn = false;
+            isGet = false;
+
+          }
+
+        }
+
 
 
 
@@ -1163,6 +1330,8 @@ class _RummikubScreenState extends State<RummikubScreen> {
 
         constructMiddle(rmtH, rmtW, isTurn);
 
+        constructWinRummyTile(rmtH, rmtW, isTurn, isGet, won);
+
         updateFromTile();
 
         updateToTile();
@@ -1170,13 +1339,38 @@ class _RummikubScreenState extends State<RummikubScreen> {
         if(anyEmptyClicked){ // If user can and click any empty tile, it means user moved that tile.
           List<String> newTakoz = [];
           print("From: $fromTile To: $toTile");
-// TODO: held tile is not counted.
-          won = numTilesInAllPers(tilesTakoz.sublist(0,15),tilesTakoz.sublist(15), middleTiles[1]);
-          print('WON NUMBERRRRRRR :::::  $won');
+// TODO: okey held?
+
+
 
           if(fromTile != -1  && toTile != -1){
+
             newTakoz = moveTile(tilesTakoz, fromTile, toTile);
 
+            List<String> tempTakoz = [];
+            tempTakoz.addAll(tilesTakoz);
+
+            tempTakoz[fromTile] = 'E';
+
+            // R1_2
+            String shower = middleTiles[1];
+
+            String showerT1 = shower.split('_')[0];
+
+            int okeyNum = int.parse(showerT1.substring(1));
+
+            if(okeyNum == 13){
+              okeyNum = 1;
+            }else{
+              ++okeyNum;
+            }
+
+            String okeyToSend = showerT1[0] + okeyNum.toString();
+
+            print('OKEY: $okeyToSend');
+
+            won = numTilesInAllPers(tempTakoz.sublist(0,15),tempTakoz.sublist(15), okeyToSend);
+            print('WON NUMBERRRRRRR :::::  $won');
 
 
             // fromTile checker
@@ -1273,7 +1467,7 @@ class _RummikubScreenState extends State<RummikubScreen> {
       backgroundColor: const Color(0xff297446),
       //resizeToAvoidBottomInset: false,
       body: PopScope(
-        canPop: true,
+        canPop: false,
         onPopInvoked: (bool didPop) {
           _showExitDialog(context);
           return;
@@ -1437,6 +1631,7 @@ class _RummikubScreenState extends State<RummikubScreen> {
     bool exit = false;
 
     await showDialog(
+      barrierDismissible: false,
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
@@ -1468,6 +1663,54 @@ class _RummikubScreenState extends State<RummikubScreen> {
     }
 
     return Future.value(!exit); // Return whether to allow or block the exit
+  }
+
+  void _showWinDialog(BuildContext context) async {
+
+    await showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('GAME OVER'),
+          content: winnerPlayer == "empty" ? Text('The winner is: YOU! Congrats.') :
+          Text('The winner is: $winnerPlayer'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _navigateToLobby();
+              },
+              child: Text('Ok'),
+            ),
+          ],
+        );
+      },
+    );
+
+  }
+
+  void _showQuitterDialog(BuildContext context) async {
+
+    await showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('USER LEAVED GAME'),
+          content: Text('The quitter  is: $quitterPlayer'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _navigateToLobby();
+              },
+              child: Text('Ok'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _navigateToLobby() {

@@ -25,6 +25,7 @@ class Tile{
 bool checkConsecutive(List<Tile> token, Tile okey){
   int firstNonOkey=-1, pivotNum=-1, i;
   String pivotCol="";
+  bool retVal;
 
   for(i=0; i<token.length; ++i){
     if(token[i]!=okey){
@@ -35,18 +36,33 @@ bool checkConsecutive(List<Tile> token, Tile okey){
     }
   }
 
+  retVal=true;
   for(i=0; i<token.length; ++i){
     if(token[i]!=okey){
-      if(token[i].number!=pivotNum+i-firstNonOkey){
-        return false;
-      }
-      if(token[i].color!=pivotCol){
-        return false;
+      if(token[i].number!=pivotNum+(i-firstNonOkey) || token[i].color!=pivotCol){
+        retVal=false;
+        break;
       }
     }
   }
+  if(retVal){
+    return true;
+  }
 
-  return true;
+  retVal=true;
+  for(i=0; i<token.length; ++i){
+    if(token[i]!=okey){
+      if(token[i].number!=pivotNum-(i-firstNonOkey) || token[i].color!=pivotCol){
+        retVal=false;
+        break;
+      }
+    }
+  }
+  if(retVal){
+    return true;
+  }
+
+  return false;
 }
 
 bool checkColor(List<Tile> token, Tile okey){
@@ -78,8 +94,9 @@ bool checkToken(List<Tile> token, Tile okey){
   for(Tile tile in token){
     if(tile==okey){
       okeyCnt++;
+    }else{
+      distClr.add(tile.color);
     }
-    distClr.add(tile.color);
   }
 
   if(token.length>=3 && distClr.length==1 && checkConsecutive(token, okey)){

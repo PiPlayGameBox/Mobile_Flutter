@@ -328,12 +328,12 @@ class _LobbyScreenState extends State<LobbyScreen> {
 
     super.initState();
 
-    /*_sendGetLobbiesRequest(createGetLobbiesMessage());
+    /*_sendGetLobbiesRequest(createGetLobbiesMessage());*/
 
     LobbyItemGlobals.joinedLobby = -1;
     LobbyItemGlobals.ludoStart = false;
     LobbyItemGlobals.okeyStart = false;
-    LobbyItemGlobals.stopCheck = false;*/
+    LobbyItemGlobals.stopCheck = false;
 
     timer = Timer.periodic(const Duration(seconds: 1), (Timer timer) {
       setState(() {
@@ -391,6 +391,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
 
     // We are stopping the timer when widget disposed.
     timer.cancel();
+
 
     super.dispose();
   }
