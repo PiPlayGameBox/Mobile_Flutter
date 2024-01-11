@@ -7,6 +7,7 @@ import 'package:ceng_mainpage/screen/rummikub_screen.dart';
 import 'package:ceng_mainpage/screens/login_screen.dart';
 import 'package:ceng_mainpage/screen/main_menu_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class lobbyScreenGlobals {
   static List<LobbyInfo> lobbyInformations = [];
@@ -318,6 +319,11 @@ class _LobbyScreenState extends State<LobbyScreen> {
   @override
   void initState() {
     // TODO: implement initState
+
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
 
     super.initState();
 

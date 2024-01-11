@@ -465,7 +465,7 @@ class _LudoScreenState extends State<LudoScreen> {
     Timer.periodic(const Duration(milliseconds: diceDurationMillis), (timer) {
       counterTimer++;
       setState(() {
-        currentImageIndex = 1 + rng.nextInt(6);
+        currentImageIndex = 2/* 1 + rng.nextInt(6)*/;
         diceTransformValue = rng.nextDouble() * 180;
       });
       if (counterTimer == counterTimerMax) {
@@ -546,12 +546,6 @@ class _LudoScreenState extends State<LudoScreen> {
               moveRequest += "|$eatenPawnNum|$eatenPawnLogInd";
             }
 
-            Map<String, int> p=calcProgress();
-            moveRequest += "|${p['r']}|${p['g']}|${p['y']}|${p['b']}";
-
-            // Send the performed move.
-            sendRequest(reqType: "MAKEMOVE", request: moveRequest);
-
             setState(() {
               // For capture case
               if (pawnPositions.contains(index)) {
@@ -566,6 +560,14 @@ class _LudoScreenState extends State<LudoScreen> {
               touchedPawnIndex = -1;
               highlightedTilePositions.clear();
             });
+
+            Map<String, int> p=calcProgress();
+            moveRequest += "|${p['r']}|${p['g']}|${p['y']}|${p['b']}";
+
+            // Send the performed move.
+            sendRequest(reqType: "MAKEMOVE", request: moveRequest);
+
+            p=calcProgress();
 
             if(p[myColor]==242){
               sendRequest(reqType: "WIN", request: "WIN|${loginGlobals.token}|1");
