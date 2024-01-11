@@ -508,7 +508,7 @@ class _LudoScreenState extends State<LudoScreen> {
         }
       }
       else { // touched pawnIndex!=-1
-        if (highlightedTilePositions.contains(touchedPawnIndex)) {
+        if (highlightedTilePositions.contains(index)) {
           if (touchedPawnIndex == index) {
             setState(() {
               touchedPawnIndex = -1;
@@ -686,7 +686,7 @@ class _LudoScreenState extends State<LudoScreen> {
                 child: Row(
                   children: [
                     SizedBox(
-                      width: size.width * 0.05,
+                      width: size.width * 0.02,
                     ),
                     Container(
                       width: size.width * 0.6,
@@ -694,7 +694,7 @@ class _LudoScreenState extends State<LudoScreen> {
                         children: [
                           Text(
                             "Turn: ",
-                            style: TextStyle(fontSize: turnInfoHeight * 0.3),
+                            style: TextStyle(fontSize: turnInfoHeight * 0.25),
                           ),
                           Text(
                             (myName==strTurnName) ? "Your" : strTurnColor,
@@ -713,14 +713,14 @@ class _LudoScreenState extends State<LudoScreen> {
                                   }
                                 }(),
                                 fontWeight: FontWeight.bold,
-                                fontSize: turnInfoHeight * 0.35),
+                                fontSize: turnInfoHeight * 0.33),
                           ),
                           SizedBox(
-                            width: size.width * 0.04,
+                            width: size.width * 0.03,
                           ),
                           Text(
                             "Dice: ",
-                            style: TextStyle(fontSize: turnInfoHeight * 0.3),
+                            style: TextStyle(fontSize: turnInfoHeight * 0.25),
                           ),
                           SizedBox(
                             width: size.width * 0.01,
@@ -739,7 +739,7 @@ class _LudoScreenState extends State<LudoScreen> {
                       ),
                       onPressed: quitOnTap,
                       child: const Padding(
-                        padding: EdgeInsets.all(8.0),
+                        padding: EdgeInsets.all(5.0),
                         child: FittedBox(
                           fit: BoxFit.fitHeight,
                           child: Text(
@@ -750,7 +750,7 @@ class _LudoScreenState extends State<LudoScreen> {
                       ),
                     ),
                     SizedBox(
-                      width: size.width * 0.05,
+                      width: size.width * 0.02,
                     ),
                   ],
                 ),
