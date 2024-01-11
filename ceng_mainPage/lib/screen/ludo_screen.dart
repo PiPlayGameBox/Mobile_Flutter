@@ -465,7 +465,7 @@ class _LudoScreenState extends State<LudoScreen> {
     Timer.periodic(const Duration(milliseconds: diceDurationMillis), (timer) {
       counterTimer++;
       setState(() {
-        currentImageIndex = 2/* 1 + rng.nextInt(6)*/;
+        currentImageIndex = 1 + rng.nextInt(6);
         diceTransformValue = rng.nextDouble() * 180;
       });
       if (counterTimer == counterTimerMax) {
