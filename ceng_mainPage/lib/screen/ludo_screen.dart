@@ -1,3 +1,4 @@
+import 'package:ceng_mainpage/screen/lobby_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:dotted_border/dotted_border.dart';
@@ -73,6 +74,7 @@ class _LudoScreenState extends State<LudoScreen> {
   String myName = "";
   String myColor = "";
   String strWinner = "";
+  String strQuitter = "";
   String strTurnName = "";
   String strTurnColor= "";
   late Random rng;
@@ -170,6 +172,48 @@ class _LudoScreenState extends State<LudoScreen> {
     "assets/images/dice_6.png"
   ];
 
+  void showWinDialog(BuildContext context) async {
+    await showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('GAME OVER'),
+          content: strWinner == myName ? Text('YOU WON! Congrats.') : Text('The winner is: $strWinner'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => LobbyScreen()));
+              },
+              child: Text('Ok'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void showQuitDialog(BuildContext context) async {
+    await showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('PLAYER LEFT'),
+          content: strQuitter == myName ? Text('You quit the game.') : Text('$strQuitter quit the game.'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => LobbyScreen()));
+              },
+              child: Text('Ok'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   // Sends request of type reqType to server, reads the returned answer.
   // May do additional things depending on the reqType.
   void sendRequest({required String reqType, required String request}) async {
@@ -213,15 +257,16 @@ class _LudoScreenState extends State<LudoScreen> {
       return convertLogicalIndex2Physical(int.parse(strLogInd));
     }).toList();
 
-    List<String> lastDice_curTurn_winner_tokens = tokens[2].split("|");
+    List<String> lastDice_curTurn_winner_quitter_tokens = tokens[2].split("|");
 
     setState(() {
-      lastDice = lastDice_curTurn_winner_tokens[0];
+      lastDice = lastDice_curTurn_winner_quitter_tokens[0];
       pawnPositions = newPawnPositions;
-      strWinner = lastDice_curTurn_winner_tokens[2];
+      strWinner = lastDice_curTurn_winner_quitter_tokens[2];
+      strQuitter = lastDice_curTurn_winner_quitter_tokens[3];
 
-      if (strWinner == "empty") {
-        strTurnName = lastDice_curTurn_winner_tokens[1];
+      if (strWinner=="empty" && strQuitter=="empty") {
+        strTurnName = lastDice_curTurn_winner_quitter_tokens[1];
 
         for(var entry in playerInfo.entries){
           if(strTurnName==entry.value){
@@ -243,16 +288,21 @@ class _LudoScreenState extends State<LudoScreen> {
           }
         }
       }
-      else { // There is a winner
+      else { // There is a winner or quitter
         // Make "whose turn" variables to no one's turn. (An invalid value.)
         strTurnName="";
         strTurnColor="No one";
 
-        // Buraya eklenmeyecek ama, aşağıdaki build metod'u winner'ı kontrol edip
-        // "empty" ise: Şu anki yaptığını yapması lazım.
-        // "empty" değil ise: Şu anki yaptığına ek, "$strWinner has won! [Back to main menu]"
-        // diye bir popup çıkarması lazım ya da diğer şeyleri küçültüp buna yer açarak
-        // altına falan da koyabilir bunu.
+        // TODO: IMPLEMENT
+
+        if(strWinner!="empty"){
+          showWinDialog(context);
+        }
+        else if(strQuitter!="empty"){
+          if(strQuitter!=myName){
+            showQuitDialog(context);
+          }
+        }
       }
 
       if (myName == strTurnName) {
@@ -262,16 +312,14 @@ class _LudoScreenState extends State<LudoScreen> {
       }
     });
 
-    if(myName!=strTurnName && strWinner=="empty"){
+    if(myName!=strTurnName && strWinner=="empty" && strQuitter=="empty"){
       Future.delayed(const Duration(milliseconds: 500), () {
         sendRequest(reqType: "GETLUDO", request: "GETLUDO|${loginGlobals.token}");
       });
     }
   }
 
-  /*
-  // TODO: calcProgress ile yapılcak ilerde.
-  bool didIwin(){
+  /*bool didIwin(){
     bool win=true;
     for(int myPawnPos in pawnPositions.sublist(sublistMap[myColor]![0], sublistMap[myColor]![1])){
       if(!winPositions[myColor]!.contains(myPawnPos)){
@@ -280,8 +328,7 @@ class _LudoScreenState extends State<LudoScreen> {
       }
     }
     return win;
-  }
-  */
+  }*/
 
   int calcProgressOfColor(String clr){
     int progress=0;
@@ -525,6 +572,10 @@ class _LudoScreenState extends State<LudoScreen> {
     }
   }
 
+  quitOnTap(){
+    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => LobbyScreen()));
+  }
+
   @override
   void initState() {
     super.initState();
@@ -596,13 +647,16 @@ class _LudoScreenState extends State<LudoScreen> {
 
   @override
   void dispose() {
-    // TODO: implement dispose
+    // TODO: IQUIT sent here.
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeRight,
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
     ]);
+
+    sendRequest(reqType: "IQUIT", request: "IQUIT|${loginGlobals.token}|1");
+
     super.dispose();
   }
 
@@ -683,7 +737,7 @@ class _LudoScreenState extends State<LudoScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
                       ),
-                      onPressed: () { /* TODO */ },
+                      onPressed: quitOnTap,
                       child: const Padding(
                         padding: EdgeInsets.all(8.0),
                         child: FittedBox(

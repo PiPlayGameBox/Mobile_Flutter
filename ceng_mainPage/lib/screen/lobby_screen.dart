@@ -23,6 +23,18 @@ class LobbyItemGlobals {
   static double okeyOpacity = 0.0;
 }
 
+void globResetLobby(){
+   lobbyScreenGlobals.lobbyInformations = [];
+   lobbyScreenGlobals.globPlayersLudo = ['empty', 'empty', 'empty', 'empty'];
+   lobbyScreenGlobals.globPlayersOkey = ['empty', 'empty', 'empty', 'empty'];
+   LobbyItemGlobals.joinedLobby = -1;
+   LobbyItemGlobals.ludoStart = false;
+   LobbyItemGlobals.okeyStart = false;
+   LobbyItemGlobals.stopCheck = false;
+   LobbyItemGlobals.ludoOpacity = 0.0;
+   LobbyItemGlobals.okeyOpacity = 0.0;
+}
+
 class LobbyInfo{
 
   String lobbyID = '';
@@ -335,10 +347,15 @@ class _LobbyScreenState extends State<LobbyScreen> {
     LobbyItemGlobals.okeyStart = false;
     LobbyItemGlobals.stopCheck = false;
 
+    globResetLobby();
+
     timer = Timer.periodic(const Duration(seconds: 1), (Timer timer) {
       setState(() {
 
         _sendGetLobbiesRequest(createGetLobbiesMessage());
+
+        _ludoStartCheck();
+        _okeyStartCheck();
 
         /*if(!LobbyItemGlobals.stopCheck){
           ludoStartCheck();
@@ -488,7 +505,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
                                       0.4,
                                   color: Colors.white),
                             ),
-                            Container(child:() {
+                            /*Container(child:() {
                               if (LobbyItemGlobals.ludoOpacity == 0.0) {
                                 return Opacity(opacity: LobbyItemGlobals.ludoOpacity + 0.3, child: const Icon(Icons.play_circle, color: Colors.white,),);
                               } else {
@@ -496,7 +513,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
                                     0.9 *
                                     0.4, ),);
                               }
-                            }(),),
+                            }(),),*/
                             /*Opacity(opacity: LobbyItemGlobals.okeyOpacity, child: IconButton(onPressed: () { _navigateToOkey(); },icon: Icon(Icons.start), ),),*/
                             const Spacer(),
                             Image.asset(
@@ -800,7 +817,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
                                       0.4,
                                   color: Colors.white),
                             ),
-                            Container(child:() {
+                            /*Container(child:() {
                               if (LobbyItemGlobals.okeyOpacity == 0.0) {
                                 return Opacity(opacity: LobbyItemGlobals.okeyOpacity + 0.3, child: const Icon(Icons.play_circle, color: Colors.white,),);
                               } else {
@@ -808,9 +825,9 @@ class _LobbyScreenState extends State<LobbyScreen> {
                                     0.9 *
                                     0.4, ),);
                               }
-                            }(),),
+                            }(),),*/
                             const Spacer(),
-                            IconButton(onPressed: (){_okeyStartCheck();}, icon: Icon(Icons.refresh)),
+                            /*IconButton(onPressed: (){_okeyStartCheck();}, icon: Icon(Icons.refresh)),*/
                             Image.asset(
                               "assets/images/okey.png",
                               height: size.width * 0.85 * 0.15,
@@ -1105,7 +1122,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
     print('B');
     print(LobbyItemGlobals.ludoStart);
 
-    Navigator.push(
+    Navigator.pushReplacement(
       context,
       MaterialPageRoute(
           builder: (context) => LudoScreen(players:  lobbyScreenGlobals.globPlayersLudo ,)),

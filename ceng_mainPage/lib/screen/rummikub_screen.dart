@@ -1698,7 +1698,7 @@ class _RummikubScreenState extends State<RummikubScreen> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text('USER LEAVED GAME'),
-          content: Text('The quitter  is: $quitterPlayer'),
+          content: Text('The quitter is: $quitterPlayer'),
           actions: <Widget>[
             TextButton(
               onPressed: () {
