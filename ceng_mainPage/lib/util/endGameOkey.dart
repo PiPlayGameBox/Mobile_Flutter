@@ -67,6 +67,14 @@ bool checkConsecutive(List<Tile> token, Tile okey){
 
 bool checkColor(List<Tile> token, Tile okey){
   Set<String> distClr={};
+  int firstNonOkey=-1;
+
+  for(int i=0; i<token.length; ++i){
+    if(token[i]!=okey){
+      firstNonOkey=i;
+      break;
+    }
+  }
 
   for(Tile tile in token){
     if(tile!=okey){
@@ -77,7 +85,7 @@ bool checkColor(List<Tile> token, Tile okey){
         distClr.add(tile.color);
       }
 
-      if(tile.number!=token[0].number){
+      if(tile.number!=token[firstNonOkey].number){
         return false;
       }
     }
