@@ -518,7 +518,7 @@ class _LudoScreenState extends State<LudoScreen> {
         }
       }
       else { // touched pawnIndex!=-1
-        if (highlightedTilePositions.contains(touchedPawnIndex)) {
+        if (highlightedTilePositions.contains(index)) {
           if (touchedPawnIndex == index) {
             setState(() {
               touchedPawnIndex = -1;
