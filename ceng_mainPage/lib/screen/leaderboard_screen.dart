@@ -1,3 +1,4 @@
+import 'package:ceng_mainpage/screen/main_menu_screen.dart';
 import 'package:ceng_mainpage/util/leaderboard_item.dart';
 import 'package:flutter/material.dart';
 import 'package:ceng_mainpage/screens/login_screen.dart';
@@ -140,6 +141,22 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             Stack(
               alignment: Alignment.center,
               children: [
+                Positioned(
+                  top: safeAreaHeight * 0.05,
+                  left: size.width * 0.02,
+                  child: FloatingActionButton(
+                    elevation: 0,
+                    backgroundColor: const Color(0xfffaab70),
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => MainMenuScreen()),
+                      );
+                    },
+                    tooltip: 'Leave',
+                    child: Icon(Icons.arrow_back_ios, size: safeAreaHeight * 0.05,),
+                  ),
+                ),
                 Center(
                   child: Container(
                     width: size.width * 0.8,

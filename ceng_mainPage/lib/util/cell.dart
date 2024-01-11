@@ -40,7 +40,7 @@ class Cell {
         3: [[2, 8, null], [3, 7, Player.grn]],
         4: [[3, 8, null], [4, 7, Player.grn]],
         5: [[4, 8, null], [5, 7, Player.grn]],
-        6: [[5, 8, null]]
+        6: [[5, 8, Player.red, Player.blu, Player.ylw]]
       },
       // Col 8
       {
@@ -328,7 +328,7 @@ class Cell {
         3: [[6, 2, null], [7, 3, Player.red]],
         4: [[6, 3, null], [7, 4, Player.red]],
         5: [[6, 4, null], [7, 5, Player.red]],
-        6: [[6, 5, null]]
+        6: [[6, 5, Player.blu, Player.ylw, Player.grn]]
       },
       // Col 1
       {
@@ -378,7 +378,7 @@ class Cell {
         3: [[8, 12, null], [7, 11, Player.ylw]],
         4: [[8, 11, null], [7, 10, Player.ylw]],
         5: [[8, 10, null], [7, 9, Player.ylw]],
-        6: [[8, 9, null]]
+        6: [[8, 9, Player.grn, Player.red, Player.blu]]
       }
     ],
 
@@ -666,7 +666,7 @@ class Cell {
         3: [[12, 6, null], [11, 7, Player.blu]],
         4: [[11, 6, null], [10, 7, Player.blu]],
         5: [[10, 6, null], [9, 7, Player.blu]],
-        6: [[9, 6, null]]
+        6: [[9, 6, Player.red, Player.grn, Player.ylw]]
       },
       // Col 8
       {

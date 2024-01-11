@@ -361,10 +361,18 @@ class _LudoScreenState extends State<LudoScreen> {
     };
   }
 
-  bool checkRestriction(Player? targetClr) {
-    if (targetClr != null && playerMap[myColor] != targetClr) {
-      return false;
+  bool checkRestriction(List<dynamic> targetClrs) {
+    if (targetClrs.length==1) {
+      if(targetClrs[0]!=null && targetClrs[0]!=playerMap[myColor]){
+        return false;
+      }
     }
+    else if(targetClrs.length==3){
+      if(!targetClrs.contains(playerMap[myColor])){
+        return false;
+      }
+    }
+
     return true;
   }
 
@@ -387,13 +395,14 @@ class _LudoScreenState extends State<LudoScreen> {
         List<List<dynamic>> moveList = moveSet[dice]!;
 
         int targetIndex;
-        Player? targetClr;
+        List<dynamic> targetClrs;
 
         if (moveList.length == 2) {
           targetIndex = moveList[1][0] * 15 + moveList[1][1];
-          targetClr = moveList[1][2];
+          targetClrs = moveList[1].sublist(2);
+          //targetClr = moveList[1][2];
 
-          if (checkRestriction(targetClr)) {
+          if (checkRestriction(targetClrs)) {
             if(checkCollision(targetIndex)){
               return targetIndex;
             }
@@ -405,9 +414,10 @@ class _LudoScreenState extends State<LudoScreen> {
 
         // Check the first move.
         targetIndex = moveList[0][0] * 15 + moveList[0][1];
-        targetClr = moveList[0][2];
+        targetClrs = moveList[0].sublist(2);
+        //targetClr = moveList[0][2];
 
-        if (checkCollision(targetIndex) && checkRestriction(targetClr)) {
+        if (checkCollision(targetIndex) && checkRestriction(targetClrs)) {
           return targetIndex;
         }
       }
@@ -508,7 +518,7 @@ class _LudoScreenState extends State<LudoScreen> {
         }
       }
       else { // touched pawnIndex!=-1
-        if (highlightedTilePositions.contains(index)) {
+        if (highlightedTilePositions.contains(touchedPawnIndex)) {
           if (touchedPawnIndex == index) {
             setState(() {
               touchedPawnIndex = -1;
@@ -686,7 +696,7 @@ class _LudoScreenState extends State<LudoScreen> {
                 child: Row(
                   children: [
                     SizedBox(
-                      width: size.width * 0.02,
+                      width: size.width * 0.05,
                     ),
                     Container(
                       width: size.width * 0.6,
@@ -694,7 +704,7 @@ class _LudoScreenState extends State<LudoScreen> {
                         children: [
                           Text(
                             "Turn: ",
-                            style: TextStyle(fontSize: turnInfoHeight * 0.25),
+                            style: TextStyle(fontSize: turnInfoHeight * 0.3),
                           ),
                           Text(
                             (myName==strTurnName) ? "Your" : strTurnColor,
@@ -713,14 +723,14 @@ class _LudoScreenState extends State<LudoScreen> {
                                   }
                                 }(),
                                 fontWeight: FontWeight.bold,
-                                fontSize: turnInfoHeight * 0.33),
+                                fontSize: turnInfoHeight * 0.35),
                           ),
                           SizedBox(
-                            width: size.width * 0.03,
+                            width: size.width * 0.04,
                           ),
                           Text(
                             "Dice: ",
-                            style: TextStyle(fontSize: turnInfoHeight * 0.25),
+                            style: TextStyle(fontSize: turnInfoHeight * 0.3),
                           ),
                           SizedBox(
                             width: size.width * 0.01,
