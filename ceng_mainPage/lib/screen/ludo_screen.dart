@@ -537,7 +537,7 @@ class _LudoScreenState extends State<LudoScreen> {
             }
 
             Map<String, int> p=calcProgress();
-            moveRequest += "/${p['r']}|${p['g']}|${p['y']}|${p['b']}";
+            moveRequest += "|${p['r']}|${p['g']}|${p['y']}|${p['b']}";
 
             // Send the performed move.
             sendRequest(reqType: "MAKEMOVE", request: moveRequest);
