@@ -13,9 +13,19 @@ import '../widget/custom_button.dart';
 class mainMenuGlobals{
   static List<String> picList = [
     "assets/images/fox.png",
+    "assets/images/lion.png",
     "assets/images/frog.png",
     "assets/images/monkey.png",
     "assets/images/owl.png",
+    "assets/images/goat.png",
+    "assets/images/rhino.png",
+    "assets/images/horse.png",
+    "assets/images/eagle.png",
+    "assets/images/gorilla.png",
+    "assets/images/panda-bear.png",
+    "assets/images/turtle.png",
+    "assets/images/elephant.png",
+    "assets/images/snake.png",
   ];
   static int ICON_NUMBER = picList.length;
 }
