@@ -558,11 +558,11 @@ class _LudoScreenState extends State<LudoScreen> {
             });
 
             if(p[myColor]==242){
-              sendRequest(reqType: "IWON", request: "IWON|${loginGlobals.token}|1");
+              sendRequest(reqType: "WIN", request: "WIN|${loginGlobals.token}|1");
             }
 
             // Get the new board.
-            // MAKEMOVE and IWON requests "MUST" arrive to server before the following GETLUDO.
+            // MAKEMOVE and WON requests "MUST" arrive to server before the following GETLUDO.
             // Increase the duration if necessary.
             await Future.delayed(Duration(milliseconds: 600));
             sendRequest(reqType: "GETLUDO", request: "GETLUDO|${loginGlobals.token}");
@@ -647,7 +647,7 @@ class _LudoScreenState extends State<LudoScreen> {
 
   @override
   void dispose() {
-    // TODO: IQUIT sent here.
+    // TODO: QUIT sent here.
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeRight,
       DeviceOrientation.landscapeLeft,
@@ -655,7 +655,7 @@ class _LudoScreenState extends State<LudoScreen> {
       DeviceOrientation.portraitDown,
     ]);
 
-    sendRequest(reqType: "IQUIT", request: "IQUIT|${loginGlobals.token}|1");
+    sendRequest(reqType: "QUIT", request: "QUIT|${loginGlobals.token}|1");
 
     super.dispose();
   }
